@@ -12,12 +12,11 @@ let baseLayers = {
 		maxZoom: 19,
 		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 	}),
-	"TacticalMap": L.tileLayer('https://tile.jawg.io/jawg-dark/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
-		attribution: '<a href="https://jawg.io" title="Tiles Courtesy of Jawg Maps" target="_blank">&copy; <b>Jawg</b>Maps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-		minZoom: 0,
-		maxZoom: 22,
-		accessToken: '<your accessToken>'
-	}),
+		"CartoDB_DarkMatter" : L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+			subdomains: 'abcd',
+			maxZoom: 20
+		}),
 	"Terrain": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
 		attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
 		minZoom: 0,
@@ -43,7 +42,36 @@ map.addLayer(drawnItems);
 drawControl = new L.Control.Draw({
     edit: {
         featureGroup: drawnItems
-    }
+    },
+	draw : {
+		polyline: {
+			shapeOptions: {
+				color: '#f33bee', // Border color
+				weight: 20
+			}
+		},
+		polygon: {
+			shapeOptions: {
+				color: 'black', // Border color
+				fillColor: '#ab0707', // Fill color
+				fillOpacity: 0.5 // Fill opacity
+			}
+		},
+		rectangle: {
+			shapeOptions: {
+				color: 'black', // Border color
+				fillColor: '#ab0707', // Fill color
+				fillOpacity: 0.5 // Fill opacity
+			}
+		},
+		circle: {
+			shapeOptions: {
+				color: 'black', // Border color
+				fillColor: '#ab0707', // Fill color
+				fillOpacity: 0.5 // Fill opacity
+			}
+		}
+	}
 });
 map.addControl(drawControl);
 
@@ -58,24 +86,22 @@ function createFormPopup() {
     drawnItems.bindPopup(popupContent).openPopup();
 }
 
-map.on(L.Draw.Event.CREATED, function (event) {
-	let type = event.layerType;
-    let layer = event.layer;
-	
+map.on('draw:created', function (e) {
+	let type = e.layerType;
+    let layer = e.layer;
+	console.log(type)
 	let shape = layer.toGeoJSON();
-	console.log(shape);
-  	let shape_for_db = JSON.stringify(shape);
-	console.log(shape_for_db)
-
-    if (type === 'marker') {
-        // Do marker specific actions
-    }
-
+	console.log(shape.geometry.type)
+	if (shape.type === 'Polygon') {
+		console.log(shape, "HEY");
+		let shape_for_db = JSON.stringify(shape);
+		console.log(shape_for_db)
+	}
     // Do whatever else you need to. (save to db, add to map etc)
     drawnItems.addLayer(layer);
 	createFormPopup();
 	drawnItems.eachLayer(function(layer) {
-        geojson = JSON.stringify(layer.toGeoJSON().geometry);    
+        let geojson = JSON.stringify(layer.toGeoJSON().geometry);
         console.log(geojson);
     });
 });
