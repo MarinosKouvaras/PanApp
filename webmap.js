@@ -1,6 +1,6 @@
 // Import the leaflet package
 let L = require('leaflet');
-var drawControl = require('leaflet-draw-drag');
+let drawControl = require('leaflet-draw-drag');
 
 
 // map initialization
@@ -28,7 +28,7 @@ let lgtt = L.marker([38.11, 23.78]).bindPopup('lgtt');
 let airports = L.layerGroup([lgtt]);
 
 let overlayAirports = {
-	"Aiports": airports
+	"Airports": airports
 }
 
 
@@ -36,11 +36,11 @@ L.control.layers(baseLayers, overlayAirports).addTo(map);
 baseLayers["OpenStreet"].addTo(map)
 
 // Initialize the FeatureGroup to store editable layers
-var drawnItems = new L.FeatureGroup();
+let drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
 // Initialize the draw control and pass it the FeatureGroup of editable layers
-var drawControl = new L.Control.Draw({
+drawControl = new L.Control.Draw({
     edit: {
         featureGroup: drawnItems
     }
@@ -48,7 +48,7 @@ var drawControl = new L.Control.Draw({
 map.addControl(drawControl);
 
 function createFormPopup() {
-    var popupContent = 
+    let popupContent =
         '<form>Description:<br>' +
         '<input type="text" id="input_desc"><br>' +
         'Name:<br>' +
@@ -59,12 +59,12 @@ function createFormPopup() {
 }
 
 map.on(L.Draw.Event.CREATED, function (event) {
-	var type = event.layerType;
-    var layer = event.layer;
+	let type = event.layerType;
+    let layer = event.layer;
 	
-	var shape = layer.toGeoJSON();
+	let shape = layer.toGeoJSON();
 	console.log(shape);
-  	var shape_for_db = JSON.stringify(shape);
+  	let shape_for_db = JSON.stringify(shape);
 	console.log(shape_for_db)
 
     if (type === 'marker') {
@@ -80,7 +80,7 @@ map.on(L.Draw.Event.CREATED, function (event) {
     });
 });
 map.on('draw:edited', function (e) {
-	var layers = e.layers;
+	let layers = e.layers;
 	console.log("EDIT");
 	layers.eachLayer(function (layer) {
 		//do whatever you want; most likely save back to db
