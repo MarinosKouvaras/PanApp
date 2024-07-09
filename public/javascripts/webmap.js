@@ -15171,7 +15171,7 @@ map.on('draw:created', function (e) {
 	console.log(type)
 	let shape = layer.toGeoJSON();
 	console.log(shape.geometry.type)
-	if (shape.type === 'Polygon') {
+	if (shape.geometry.type === 'Polygon') {
 		console.log(shape, "HEY");
 		let shape_for_db = JSON.stringify(shape);
 		console.log(shape_for_db)
@@ -15179,10 +15179,10 @@ map.on('draw:created', function (e) {
     // Do whatever else you need to. (save to db, add to map etc)
     drawnItems.addLayer(layer);
 	createFormPopup();
-	drawnItems.eachLayer(function(layer) {
-        let geojson = JSON.stringify(layer.toGeoJSON().geometry);
-        console.log(geojson);
-    });
+	//drawnItems.eachLayer(function(layer) {
+    //    let geojson = JSON.stringify(layer.toGeoJSON().geometry);
+    //    console.log(geojson);
+    //});
 });
 map.on('draw:edited', function (e) {
 	let layers = e.layers;

@@ -2,18 +2,20 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Posts', {
+    await queryInterface.createTable('Shapes', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      title: {
-        type: Sequelize.STRING
+      type: {
+        type: Sequelize.STRING,
+        allowNull: false
       },
-      message: {
-        type: Sequelize.TEXT
+      geometry: {
+        type: Sequelize.GEOMETRY('POLYGON', 4326), // Example for Polygon, adjust as needed
+        allowNull: false
       },
       createdAt: {
         allowNull: false,
@@ -25,7 +27,7 @@ module.exports = {
       }
     });
   },
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Posts');
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('Shapes');
   }
 };

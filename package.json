@@ -9,7 +9,9 @@
     "serverstart": "DEBUG=express-locallibrary-tutorial:* npm run devstart",
     "build": "browserify webmap.js -o public/javascripts/webmap.js & cp node_modules/leaflet/dist/leaflet.css public/stylesheets/leaflet.css & cp node_modules/leaflet-draw/dist/leaflet.draw-src.css public/stylesheets/leaflet-drw.css & cp node_modules/leaflet-draw/dist/leaflet.draw.css public/stylesheets/leafletdrw-drw.css",
     "lint": "eslint app.js",
-    "watch": "watch 'npm run build' ."
+    "watch": "watch 'npm run build' .",
+    "db:migrate": "npx sequelize-cli db:migrate",
+    "db:reset": "npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all — seeders-path ./database/seeders"
   },
   "dependencies": {
     "axios": "^0.27.2",
