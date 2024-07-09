@@ -15,8 +15,14 @@ module.exports = {
       message: {
         type: Sequelize.TEXT
       },
-      createdAt: {type: DataTypes.DATE, allowNull: false, field: 'created_at'},
-      updatedAt: {type: DataTypes.DATE, allowNull: false, field: 'updated_at'}
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      }
     });
   },
   async down(queryInterface, Sequelize) {
