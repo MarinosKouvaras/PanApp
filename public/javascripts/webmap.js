@@ -15192,6 +15192,30 @@ map.on('draw:edited', function (e) {
 	});
 });
 
+// Fetch the drawing data from the server
+fetch('/drawings')
+.then(response => response.json())
+.then(data => {
+  data.forEach(drawing => {
+	const coordinates = JSON.parse(drawing.coordinates);
+
+	switch (drawing.type) {
+	  case 'polygon':
+		L.polygon(coordinates).addTo(map);
+		break;
+	  case 'polyline':
+		L.polyline(coordinates).addTo(map);
+		break;
+	  case 'marker':
+		L.marker(coordinates).addTo(map);
+		break;
+	  default:
+		console.error('Unknown drawing type:', drawing.type);
+	}
+  });
+})
+.catch(err => console.error('Error fetching drawing data:', err));
+
 let popup = L.popup();
 
 
