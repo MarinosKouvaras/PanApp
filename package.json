@@ -11,7 +11,7 @@
     "lint": "eslint app.js",
     "watch": "watch 'npm run build' .",
     "db:migrate": "npx sequelize-cli db:migrate",
-    "db:reset": "npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all — seeders-path ./database/seeders"
+    "db:reset": "npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all --seeders-path ./database/seeders"
   },
   "dependencies": {
     "axios": "^0.27.2",

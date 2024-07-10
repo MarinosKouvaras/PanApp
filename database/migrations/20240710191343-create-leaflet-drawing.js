@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Shapes', {
+    await queryInterface.createTable('LeafletDrawings', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -10,12 +10,19 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       type: {
-        type: Sequelize.STRING,
-        allowNull: false
+        type: Sequelize.STRING
       },
-      geometry: {
-        type: Sequelize.GEOMETRY('POLYGON', 4326), // Example for Polygon, adjust as needed
-        allowNull: false
+      coordinates: {
+        type: Sequelize.JSON
+      },
+      userId: {
+        type: Sequelize.INTEGER
+      },
+      createdAt: {
+        type: Sequelize.DATE
+      },
+      updatedAt: {
+        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,
@@ -27,7 +34,7 @@ module.exports = {
       }
     });
   },
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Shapes');
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('LeafletDrawings');
   }
 };
