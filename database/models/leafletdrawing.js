@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     coordinates: {
-      type: DataTypes.JSON,
+      type: DataTypes.GEOMETRY('GEOMETRY', 4326),
       allowNull: false,
     },
     userId: {
