@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
       offset: offset,
       order: [['createdAt', 'DESC']]
     });
+    console.log('Drawings data:', JSON.stringify(drawings.rows, null, 2));
 
     res.json({
       drawings: drawings.rows,
@@ -21,6 +22,8 @@ router.get('/', async (req, res) => {
       currentPage: page
     });
   } catch (err) {
+    console.error('Error in GET /drawings:', err);
+
     res.status(500).json({ error: err.message });
   }
 });

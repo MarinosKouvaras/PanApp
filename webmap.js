@@ -153,11 +153,11 @@ const overlayAirports = {
 // Add layer control to map
 L.control.layers(baseLayers, overlayAirports).addTo(map);
 baseLayers["OpenStreet"].addTo(map);
-loadDrawings();
+
 
 
 // Initialize the FeatureGroup to store editable layers
-let drawnItems = new L.FeatureGroup();
+const drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
 // Initialize the draw control and pass it the FeatureGroup of editable layers
@@ -214,7 +214,8 @@ async function fetchDrawings() {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
-		console.log(data.drawings)
+        console.log('Received data:', data);
+		//console.log(data.drawings)
         return data.drawings; // Return just the drawings array
     } catch (error) {
         console.error('Error fetching drawings:', error);
@@ -222,41 +223,51 @@ async function fetchDrawings() {
 }
 
 function createLayerFromDrawing(drawing) {
-    let layer;
-    const coordinates = JSON.parse(drawing.coordinates);
-	//const coordinates = JSON.stringify(drawing.coordinates);
+    let my_layer;
+    let geoJSON = drawing.coordinates; // The coordinates are already an object, no need to parse
 
-    switch (drawing.type) {
+    console.log('Processing drawing:', drawing); // For debugging
+
+    switch (geoJSON.type) {
         case 'Point':
-            layer = L.marker(coordinates);
+            my_layer = L.marker([geoJSON.coordinates[1], geoJSON.coordinates[0]]);
             break;
         case 'LineString':
-            layer = L.polyline(coordinates);
+            my_layer = L.polyline(geoJSON.coordinates.map(coord => [coord[1], coord[0]]));
             break;
         case 'Polygon':
-            layer = L.polygon(coordinates);
+            my_layer = L.polygon(geoJSON.coordinates[0].map(coord => [coord[1], coord[0]]));
             break;
         // Add cases for other geometry types as needed
+        default:
+            console.warn('Unsupported geometry type:', geoJSON.type);
+            return null;
     }
 
-    if (layer) {
-        layer.bindPopup(`Name: ${drawing.name}<br>Description: ${drawing.description}`);
-    } else {
-		console.log("fail")
-	}
+    if (my_layer) {
+        my_layer.bindPopup(`Type: ${drawing.type}<br>User ID: ${drawing.userId}`);
+    }
 
-    return layer;
+    return my_layer;
 }
 
 async function loadDrawings() {
+    console.log('Loading drawings...');
     const drawings = await fetchDrawings();
-    if (drawings) {
-        drawings.forEach(drawing => {
-            const layer = createLayerFromDrawing(drawing);
-            if (layer) {
-                drawnItems.addLayer(layer);
-            }
-        });
+    console.log('Drawings to load:', drawings);
+    if (drawings && drawings.length > 0) {
+      drawings.forEach(drawing => {
+        console.log('Processing drawing:', drawing);
+        const layer = createLayerFromDrawing(drawing);
+        if (layer) {
+          drawnItems.addLayer(layer);
+          console.log('Added layer to map');
+        } else {
+          console.log('Failed to create layer for drawing:', drawing);
+        }
+      });
+    } else {
+      console.log('No drawings to load');
     }
 }
 
@@ -324,5 +335,10 @@ map.on('draw:deleted', function (e) {
     });
 });
 
+loadDrawings();
+// Add this after map initialization
+L.marker([51.5, -0.09]).addTo(map)
+    .bindPopup('A test marker')
+    .openPopup();
 let popup = L.popup();
 
