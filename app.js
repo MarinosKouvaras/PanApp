@@ -14,7 +14,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/drawings', drawingsRouter);
-app.use(shapeRoutes);
+app.use('/shapes', shapeRoutes);
 
 
 app.use(logger('dev'));

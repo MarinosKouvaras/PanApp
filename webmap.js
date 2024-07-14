@@ -205,58 +205,123 @@ function createFormPopup() {
     </form>`;
 }
 
-async function fetchDrawings() {
+async function fetchShapes() {
     try {
-        const response = await fetch('http://localhost:3000/drawings');
+        const response = await fetch('http://localhost:3000/shapes');
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
         console.log('Received data:', data);
 		//console.log(data.drawings)
-        return data.drawings; // Return just the drawings array
+        return data.shapes; // Return just the shape array
     } catch (error) {
         console.error('Error fetching drawings:', error);
     }
 }
 
-function createLayerFromDrawing(drawing) {
-    let my_layer;
-    let geoJSON = drawing.coordinates; // The coordinates are already an object, no need to parse
+// function createLayerFromShape(shape) {
+//     console.log('Creating layer from shape:', shape);
+//     let layer;
+//     try {
+//         const geoJSON = {
+//             type: 'Feature',
+//             geometry: {
+//                 type: shape.type,
+//                 coordinates: JSON.parse(shape.coordinates)
+//             },
+//             properties: {
+//                 name: shape.name,
+//                 description: shape.description
+//             }
+//         };
 
-    console.log('Processing drawing:', drawing); // For debugging
+//         console.log('GeoJSON object:', geoJSON);
 
-    switch (geoJSON.type) {
-        case 'Point':
-            my_layer = L.marker([geoJSON.coordinates[1], geoJSON.coordinates[0]]);
-            break;
-        case 'LineString':
-            my_layer = L.polyline(geoJSON.coordinates.map(coord => [coord[1], coord[0]]));
-            break;
-        case 'Polygon':
-            my_layer = L.polygon(geoJSON.coordinates[0].map(coord => [coord[1], coord[0]]));
-            break;
-        // Add cases for other geometry types as needed
-        default:
-            console.warn('Unsupported geometry type:', geoJSON.type);
-            return null;
+//         switch (shape.type) {
+//             case 'Point':
+//                 layer = L.geoJSON(geoJSON);
+//                 break;
+//             case 'LineString':
+//                 layer = L.geoJSON(geoJSON);
+//                 break;
+//             case 'Polygon':
+//                 layer = L.geoJSON(geoJSON);
+//                 break;
+//             case 'Circle':
+//                 layer = L.geoJSON(geoJSON);
+//                 break;
+//             default:
+//                 console.warn('Unsupported geometry type:', shape.type);
+//                 return null;
+//         }
+
+//         if (layer) {
+//             layer.bindPopup(`Name: ${shape.name}<br>Description: ${shape.description}`);
+//         }
+
+//         return layer;
+//     } catch (error) {
+//         console.error('Error creating layer:', error);
+//         return null;
+//     }
+// }
+function createLayerFromShape(shape) {
+    console.log('Creating layer from shape:', shape);
+    let layer;
+    try {
+        let coordinates = shape.coordinates;
+        if (typeof coordinates === 'string') {
+            try {
+                coordinates = JSON.parse(coordinates);
+            } catch (error) {
+                console.error('Error parsing coordinates:', coordinates);
+            }
+        }
+        console.log('Processed coordinates:', coordinates);
+
+        switch (shape.type) {
+            case 'Point':
+                layer = L.marker(coordinates);
+                console.log('Created Point layer');
+                break;
+            case 'LineString':
+                layer = L.polyline(coordinates);
+                console.log('Created LineString layer');
+                break;
+            case 'Polygon':
+                layer = L.polygon(coordinates);
+                console.log('Created Polygon layer');
+                break;
+            case 'Circle':
+                layer = L.circle(coordinates[0], { radius: shape.radius });
+                console.log('Created Circle layer');
+                break;
+            default:
+                console.warn('Unsupported geometry type:', shape.type);
+                return null;
+        }
+
+        if (layer) {
+            layer.bindPopup(`Name: ${shape.name}<br>Description: ${shape.description}`);
+            console.log('Bound popup to layer');
+        }
+
+        return layer;
+    } catch (error) {
+        console.error('Error creating layer:', error);
+        return null;
     }
-
-    if (my_layer) {
-        my_layer.bindPopup(`Type: ${drawing.type}<br>User ID: ${drawing.userId}`);
-    }
-
-    return my_layer;
 }
 
-async function loadDrawings() {
-    console.log('Loading drawings...');
-    const drawings = await fetchDrawings();
-    console.log('Drawings to load:', drawings);
-    if (drawings && drawings.length > 0) {
-      drawings.forEach(drawing => {
-        console.log('Processing drawing:', drawing);
-        const layer = createLayerFromDrawing(drawing);
+async function loadShapes() {
+    console.log('Loading shapes...');
+    const my_shapes = await fetchShapes();
+    console.log('Drawings to load:', my_shapes);
+    if (my_shapes && my_shapes.length > 0) {
+      my_shapes.forEach(shape => {
+        console.log('Processing drawing:', my_shapes);
+        const layer = createLayerFromShape(shape);
         if (layer) {
           drawnItems.addLayer(layer);
           console.log('Added layer to map');
@@ -265,36 +330,75 @@ async function loadDrawings() {
         }
       });
     } else {
-      console.log('No drawings to load');
+      console.log('No shapes to load');
     }
 }
 
+// async function saveShape(shape, name, description) {
+//     const data = {
+//         type: shape.geometry.type,
+//         coordinates: JSON.stringify(shape.geometry.coordinates),
+//         name: name,
+//         description: description,
+//     };
+//     console.log('Sending shape data:', data);
+//     try {
+//         const response = await fetch('/shapes', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(data),
+//         });
+//         if (!response.ok) {
+//             const errorText = await response.text();
+//             throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+//         }
+//         return response.json();
+//     } catch (error) {
+//         console.error('Error saving shape:', error);
+//         throw error;
+//     }
+// }
 async function saveShape(shape, name, description) {
-    const data = {
-        type: shape.geometry.type,
-        coordinates: shape.geometry.coordinates,
-        name: name,
-        description: description,
-      };
-      console.log('Sending shape data:', data);
-        const response = await fetch('/shapes', {
+    let data;
+    if (shape.geometry.type === 'Point' && shape.properties.radius) {
+        // This is a circle
+        data = {
+            type: 'Circle',
+            coordinates: JSON.stringify(shape.geometry.coordinates),
+            radius: shape.properties.radius,
+            name: name,
+            description: description,
+        };
+    } else {
+        data = {
+            type: shape.geometry.type,
+            coordinates: JSON.stringify(shape.geometry.coordinates),
+            name: name,
+            description: description,
+        };
+    }
+    console.log('Sending shape data:', data);
+
+    try {
+        const response = await fetch('http://localhost:3000/shapes', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                type: shape.geometry.type,
-                coordinates: shape.geometry.coordinates,
-                name: name,
-                description: description,
-            }),
+            body: JSON.stringify(data),
         });
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
         return response.json();
+    } catch (error) {
+        console.error('Error saving shape:', error);
+        throw error;
+    }
 }
-
 
 map.on('draw:created', function (e) {
     const layer = e.layer;
@@ -337,7 +441,7 @@ map.on('draw:deleted', function (e) {
     });
 });
 
-loadDrawings();
+loadShapes();
 
 //let popup = L.popup();
 
