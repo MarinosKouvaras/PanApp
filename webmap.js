@@ -198,13 +198,11 @@ const drawController = new L.Control.Draw({
 map.addControl(drawController);
 
 function createFormPopup() {
-    const popupContent =
-        '<form id="shape-form">' +
-        'Description:<br><input type="text" id="input_desc"><br>' +
-        'Name:<br><input type="text" id="input_name"><br>' +
-        '<input type="submit" value="Submit">' + 
-        '</form>';
-    drawnItems.bindPopup(popupContent).openPopup();
+    return `<form id="shape-form">
+        Name: <input type="text" id="input_name"><br>
+        Description: <input type="text" id="input_desc"><br>
+        <input type="submit" value="Save">
+    </form>`;
 }
 
 async function fetchDrawings() {
@@ -272,15 +270,21 @@ async function loadDrawings() {
 }
 
 async function saveShape(shape, name, description) {
-    try {
-        const response = await fetch('/drawings', {
+    const data = {
+        type: shape.geometry.type,
+        coordinates: shape.geometry.coordinates,
+        name: name,
+        description: description,
+      };
+      console.log('Sending shape data:', data);
+        const response = await fetch('/shapes', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 type: shape.geometry.type,
-                coordinates: JSON.stringify(shape.geometry.coordinates),
+                coordinates: shape.geometry.coordinates,
                 name: name,
                 description: description,
             }),
@@ -288,32 +292,30 @@ async function saveShape(shape, name, description) {
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        const savedDrawing = await response.json();
-        const layer = createLayerFromDrawing(savedDrawing);
-        if (layer) {
-            drawnItems.addLayer(layer);
-        }
-        return savedDrawing;
-    } catch (error) {
-        console.error('Error:', error);
-    }
+        return response.json();
 }
 
 
 map.on('draw:created', function (e) {
     const layer = e.layer;
-	alert(layer);
+    const shape = layer.toGeoJSON();
+	//alert(layer);
     drawnItems.addLayer(layer);
-    createFormPopup();
+    layer.bindPopup(createFormPopup()).openPopup();
 
     // Handle form submission
-    document.getElementById('shape-form').addEventListener('submit', async function(event) {
-        event.preventDefault();
+    document.getElementById('shape-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
         const name = document.getElementById('input_name').value;
         const description = document.getElementById('input_desc').value;
-        const shape = layer.toGeoJSON();
-        await saveShape(shape, name, description);
-        drawnItems.closePopup();
+        try {
+            const savedShape = await saveShape(shape, name, description);
+            console.log('Drawing saved:', savedShape);
+            layer.setPopupContent(`Name: ${name}<br>Description: ${description}`);
+        } catch (error) {
+            console.error('Error saving drawing:', error);
+            layer.setPopupContent('Error saving drawing. Please try again.');
+        }
     });
 });
 
@@ -336,9 +338,6 @@ map.on('draw:deleted', function (e) {
 });
 
 loadDrawings();
-// Add this after map initialization
-L.marker([51.5, -0.09]).addTo(map)
-    .bindPopup('A test marker')
-    .openPopup();
-let popup = L.popup();
+
+//let popup = L.popup();
 

@@ -7,14 +7,18 @@ const logger = require('morgan');
 const cors = require('cors');
 
 const drawingsRouter = require('./routes/drawings');
+const shapeRoutes = require('./routes/shapes');
 
 
 const app = express();
-app.use('/drawings', drawingsRouter);
 app.use(cors());
+app.use(express.json());
+app.use('/drawings', drawingsRouter);
+app.use(shapeRoutes);
+
 
 app.use(logger('dev'));
-app.use(express.json());
+
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
