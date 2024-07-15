@@ -317,7 +317,9 @@ function createLayerFromShape(shape) {
         
         let layer;
         if (shape.type === 'Circle') {
-            layer = L.circle(coordinates, { radius: shape.radius });
+            //layer = L.circle(coordinates, { radius: shape.radius });
+            const center = [coordinates[1], coordinates[0]];
+            layer = L.circle(center, { radius: shape.radius });
         } else {
             const geoJSON = {
                 type: 'Feature',
