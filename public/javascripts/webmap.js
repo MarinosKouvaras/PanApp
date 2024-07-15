@@ -15345,46 +15345,77 @@ async function fetchShapes() {
 //         return null;
 //     }
 // }
+// function createLayerFromShape(shape) {
+//     console.log('Creating layer from shape:', shape);
+//     try {
+//         const geoJSON = {
+//             type: 'Feature',
+//             geometry: {
+//                 type: shape.type,
+//                 coordinates: Array.isArray(shape.coordinates) ? shape.coordinates : JSON.parse(shape.coordinates)
+//             },
+//             properties: {
+//                 name: shape.name,
+//                 description: shape.description,
+//                 radius: shape.radius // Include radius for circles
+//             }
+//         };
+
+//         console.log('Created GeoJSON:', geoJSON);
+
+//         let layer = L.geoJSON(geoJSON, {
+//             pointToLayer: function (feature, latlng) {
+//                 if (feature.geometry.type === 'Point' && feature.properties.radius) {
+//                     return L.circle(latlng, { radius: feature.properties.radius });
+//                 } else {
+//                     return L.marker(latlng);
+//                 }
+//             },
+//             style: function (feature) {
+//                 // You can add styles based on feature properties here
+//                 return { color: '#3388ff' };
+//             }
+//         });
+
+//         layer.bindPopup(function (layer) {
+//             return `Name: ${layer.feature.properties.name}<br>Description: ${layer.feature.properties.description}`;
+//         });
+
+//         console.log('Created layer:', layer);
+
+//         return layer;
+//     } catch (error) {
+//         console.error('Error creating layer:', error);
+//         return null;
+//     }
+// }
 function createLayerFromShape(shape) {
     console.log('Creating layer from shape:', shape);
-    let layer;
     try {
-        let coordinates = shape.coordinates;
-        if (typeof coordinates === 'string') {
-            try {
-                coordinates = JSON.parse(coordinates);
-            } catch (error) {
-                console.error('Error parsing coordinates:', coordinates);
-            }
-        }
-        console.log('Processed coordinates:', coordinates);
+        let coordinates = Array.isArray(shape.coordinates) ? shape.coordinates : JSON.parse(shape.coordinates);
+        
+        let layer;
+        if (shape.type === 'Circle') {
+            layer = L.circle(coordinates, { radius: shape.radius });
+        } else {
+            const geoJSON = {
+                type: 'Feature',
+                geometry: {
+                    type: shape.type,
+                    coordinates: coordinates
+                },
+                properties: {
+                    name: shape.name,
+                    description: shape.description
+                }
+            };
 
-        switch (shape.type) {
-            case 'Point':
-                layer = L.marker(coordinates);
-                console.log('Created Point layer');
-                break;
-            case 'LineString':
-                layer = L.polyline(coordinates);
-                console.log('Created LineString layer');
-                break;
-            case 'Polygon':
-                layer = L.polygon(coordinates);
-                console.log('Created Polygon layer');
-                break;
-            case 'Circle':
-                layer = L.circle(coordinates[0], { radius: shape.radius });
-                console.log('Created Circle layer');
-                break;
-            default:
-                console.warn('Unsupported geometry type:', shape.type);
-                return null;
+            layer = L.geoJSON(geoJSON);
         }
 
-        if (layer) {
-            layer.bindPopup(`Name: ${shape.name}<br>Description: ${shape.description}`);
-            console.log('Bound popup to layer');
-        }
+        layer.bindPopup(`Name: ${shape.name}<br>Description: ${shape.description}`);
+
+        console.log('Created layer:', layer);
 
         return layer;
     } catch (error) {
@@ -15392,24 +15423,25 @@ function createLayerFromShape(shape) {
         return null;
     }
 }
-
 async function loadShapes() {
     console.log('Loading shapes...');
-    const my_shapes = await fetchShapes();
-    console.log('Drawings to load:', my_shapes);
-    if (my_shapes && my_shapes.length > 0) {
-      my_shapes.forEach(shape => {
-        console.log('Processing drawing:', my_shapes);
-        const layer = createLayerFromShape(shape);
-        if (layer) {
-          drawnItems.addLayer(layer);
-          console.log('Added layer to map');
-        } else {
-          console.log('Failed to create layer for drawing:', drawing);
-        }
-      });
+    const shapes = await fetchShapes();
+    console.log('Shapes to load:', shapes);
+    if (shapes && shapes.length > 0) {
+        shapes.forEach((shape, index) => {
+            console.log(`Processing shape ${index}:`, shape);
+            const layer = createLayerFromShape(shape);
+            if (layer) {
+                drawnItems.addLayer(layer);
+                console.log(`Added layer ${index} to map`);
+            } else {
+                console.log(`Failed to create layer for shape ${index}:`, shape);
+            }
+        });
+        // Fit the map to the bounds of all shapes
+        map.fitBounds(drawnItems.getBounds());
     } else {
-      console.log('No shapes to load');
+        console.log('No shapes to load');
     }
 }
 
@@ -15483,6 +15515,9 @@ map.on('draw:created', function (e) {
     const layer = e.layer;
     const shape = layer.toGeoJSON();
 	//alert(layer);
+    if (e.layerType === 'circle') {
+        shape.properties.radius = layer.getRadius();
+    }
     drawnItems.addLayer(layer);
     layer.bindPopup(createFormPopup()).openPopup();
 
