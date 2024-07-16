@@ -86,7 +86,7 @@ function createLayerFromShape(shape) {
         
         if (layer) {
             layer.id = shape.id; // Store the database ID on the layer
-            layer.bindPopup(`Name: ${shape.name}<br>Description: ${shape.description}`);
+            layer.bindPopup(`ID: ${shape.id}<br>Name: ${shape.name}<br>Description: ${shape.description}`);
             //layer.feature = geoJSON;
         }
 
