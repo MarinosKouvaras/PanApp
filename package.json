@@ -1,6 +1,9 @@
 {
   "name": "panapp-express",
   "version": "0.0.0",
+  "browser": {
+    "./assets/fire.png": "./assets/fire.png"
+  },
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
@@ -31,12 +34,15 @@
     "sequelize": "^6.37.3",
     "sequelize-cli": "^6.6.2",
     "sqlite3": "^5.1.7",
+    "urlify": "^0.3.6",
     "watch": "^1.0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.9",
     "@babel/core": "^7.24.0",
     "@babel/preset-env": "^7.24.0",
+    "brfs": "^2.0.2",
+    "browserify-file": "^0.1.0",
     "eslint": "^8.57.0",
     "nodemon": "^3.1.4"
   }

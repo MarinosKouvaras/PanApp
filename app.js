@@ -22,7 +22,11 @@ app.use(logger('dev'));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from the 'public' directory
 
+
+// If your assets are in a different directory, you can add another static middleware
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
