@@ -3,9 +3,8 @@ const L = require('leaflet');
 require('leaflet-draw');
 require('leaflet-draw-drag')
 const {createFormPopup,fetchShapes, createLayerFromShape, saveShape} = require('./loadDataMap');
-
-
-
+//const iconUrl = require('./assets/fire.png');
+const imageUrls = require('./imageUrls');
 
 // Map initialization
 const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
@@ -56,6 +55,8 @@ async function initializeMap() {
             maxZoom: 22,
         })
     };
+
+    
 
     // Overlay layers
     const lgtt = L.marker([38.11, 23.78]).bindPopup('lgtt');
@@ -146,9 +147,11 @@ async function initializeMap() {
         } else {
             shapeData = layer.toGeoJSON().geometry;
         }
+        console.log(`Sending PUT request to: http://localhost:3000/shapes/${id}`);
+        console.log('Shape data:', shapeData);
     
         // Send updated shape data to server
-        fetch(`/api/shapes/${id}`, {
+        fetch(`http://localhost:3000/shapes/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -193,11 +196,10 @@ async function initializeMap() {
         });
     });
 
-    //const iconUrl = require('./assets/fire.png');
-    const imageUrls = require('./imageUrls');
+    
 
     // Specify the path to your custom icon image
-    const customIcon = L.icon({
+    const fireIcon = L.icon({
         iconUrl: imageUrls.fireIcon,
         iconSize: [38, 95], // size of the icon
         iconAnchor: [22, 94], // point of the icon which will correspond to marker's location
@@ -227,21 +229,14 @@ async function initializeMap() {
       const longitude = parseFloat(fire.longitude);
 
       if (!isNaN(latitude) && !isNaN(longitude)) {
-        let fires = L.marker([latitude, longitude], {icon: customIcon});
-        L.marker([latitude, longitude], {icon: customIcon}).addTo(map)
+        L.marker([latitude, longitude], {icon: fireIcon}).addTo(map)
           .bindPopup(`<b>Fire Location:</b><br>${latitude}, ${longitude}`);
       }
     });
   })
-  .catch(error => console.error('Error fetching data:', error));
-
-  
-
-
-
-    
+  .catch(error => console.error('Error fetching data:', error));    
 }
 
-  initializeMap();
+initializeMap();
 
 

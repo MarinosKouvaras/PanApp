@@ -1,7 +1,8 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 // imageUrls.js
 module.exports = {
-    fireIcon: './assets/fire.png'
+    fireIcon: './assets/fire.png',
+    airportIcon: './assets/Civilairportwithcontroltowerbig.png'
 };
 },{}],2:[function(require,module,exports){
 
@@ -15288,9 +15289,8 @@ const L = require('leaflet');
 require('leaflet-draw');
 require('leaflet-draw-drag')
 const {createFormPopup,fetchShapes, createLayerFromShape, saveShape} = require('./loadDataMap');
-
-
-
+//const iconUrl = require('./assets/fire.png');
+const imageUrls = require('./imageUrls');
 
 // Map initialization
 const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
@@ -15342,10 +15342,13 @@ async function initializeMap() {
         })
     };
 
+    
+
     // Overlay layers
     const lgtt = L.marker([38.11, 23.78]).bindPopup('lgtt');
     const airports = L.layerGroup([lgtt]);
-    const overlayAirports = {
+    
+    let overlayAirports = {
     "Airports": airports
     };
 
@@ -15432,7 +15435,7 @@ async function initializeMap() {
         }
     
         // Send updated shape data to server
-        fetch(`/api/shapes/${id}`, {
+        fetch(`http://localhost:3000/shapes/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -15477,11 +15480,10 @@ async function initializeMap() {
         });
     });
 
-    //const iconUrl = require('./assets/fire.png');
-    const imageUrls = require('./imageUrls');
+    
 
     // Specify the path to your custom icon image
-    const customIcon = L.icon({
+    const fireIcon = L.icon({
         iconUrl: imageUrls.fireIcon,
         iconSize: [38, 95], // size of the icon
         iconAnchor: [22, 94], // point of the icon which will correspond to marker's location
@@ -15511,19 +15513,15 @@ async function initializeMap() {
       const longitude = parseFloat(fire.longitude);
 
       if (!isNaN(latitude) && !isNaN(longitude)) {
-        L.marker([latitude, longitude], {icon: customIcon}).addTo(map)
+        L.marker([latitude, longitude], {icon: fireIcon}).addTo(map)
           .bindPopup(`<b>Fire Location:</b><br>${latitude}, ${longitude}`);
       }
     });
   })
-  .catch(error => console.error('Error fetching data:', error));
-
-
-
-    
+  .catch(error => console.error('Error fetching data:', error));    
 }
 
-  initializeMap();
+initializeMap();
 
 
 
