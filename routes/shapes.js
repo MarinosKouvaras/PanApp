@@ -114,4 +114,29 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+// Add this route to your existing router file in routes/shapes.js
+
+// Delete a shape by ID
+router.delete('/:id', async (req, res) => {
+    console.log(`Received DELETE request for shape ID: ${req.params.id}`);
+    try {
+        const { id } = req.params;
+
+        const shape = await Shape.findByPk(id);
+
+        if (!shape) {
+            console.log(`Shape with ID ${id} not found`);
+            return res.status(404).json({ error: 'Shape not found' });
+        }
+
+        await shape.destroy();
+
+        console.log(`Shape with ID ${id} deleted successfully`);
+        res.json({ message: 'Shape deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting shape:', error);
+        res.status(500).json({ message: 'Error deleting shape', error: error.message });
+    }
+});
+
 module.exports = router;

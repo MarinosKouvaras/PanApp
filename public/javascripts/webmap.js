@@ -15459,7 +15459,7 @@ async function initializeMap() {
         const id = layer.id;
     
         // Send delete request to server
-        fetch(`/api/shapes/${id}`, {
+        fetch(`/shapes/${id}`, {
             method: 'DELETE',
         })
         .then(response => response.json())
