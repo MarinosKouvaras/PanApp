@@ -92,6 +92,8 @@ function createLayerFromShape(shape) {
         
         if (layer) {
             layer.id = shape.id; // Store the database ID on the layer
+            layer.name = shape.name;  // Set the name
+            layer.description = shape.description;  // Set the description
             layer.bindPopup(`ID: ${shape.id}<br>Name: ${shape.name}<br>Description: ${shape.description}`);
             //layer.feature = geoJSON;
         }
@@ -146,28 +148,50 @@ function createLayerFromShape(shape) {
 //         throw error;
 //     }
 // }
-async function saveShape(layer, name, description) {
-    let data;
-    const geoJSON = layer.toGeoJSON();
+// async function saveShape(layer, name, description) {
+//     let data;
+//     const geoJSON = layer.toGeoJSON();
 
-    if (layer instanceof L.Circle) {
-        data = {
-            type: 'Circle',
-            coordinates: JSON.stringify([layer.getLatLng().lng, layer.getLatLng().lat]),
-            radius: layer.getRadius(),
-            name: name,
-            description: description,
-        };
-    } else {
-        data = {
-            type: geoJSON.geometry.type,
-            coordinates: JSON.stringify(geoJSON.geometry.coordinates),
-            name: name,
-            description: description,
-        };
-    }
+//     if (layer instanceof L.Circle) {
+//         data = {
+//             type: 'Circle',
+//             coordinates: JSON.stringify([layer.getLatLng().lng, layer.getLatLng().lat]),
+//             radius: layer.getRadius(),
+//             name: name,
+//             description: description,
+//         };
+//     } else {
+//         data = {
+//             type: geoJSON.geometry.type,
+//             coordinates: JSON.stringify(geoJSON.geometry.coordinates),
+//             name: name,
+//             description: description,
+//         };
+//     }
 
-    console.log('Sending shape data:', data);
+//     console.log('Sending shape data:', data);
+
+//     try {
+//         const response = await fetch('http://localhost:3000/shapes', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(data),
+//         });
+//         if (!response.ok) {
+//             const errorText = await response.text();
+//             throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+//         }
+//         return response.json();
+//     } catch (error) {
+//         console.error('Error saving shape:', error);
+//         throw error;
+//     }
+// }
+
+async function saveShape(shapeData) {
+    console.log('Sending shape data:', shapeData);
 
     try {
         const response = await fetch('http://localhost:3000/shapes', {
@@ -175,7 +199,7 @@ async function saveShape(layer, name, description) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify(shapeData),
         });
         if (!response.ok) {
             const errorText = await response.text();
@@ -207,7 +231,7 @@ require('./src/Edit.Rectangle.Drag');
 
 module.exports = L.Edit.Poly;
 
-},{"./src/Edit.Circle.Drag":5,"./src/Edit.Poly.Drag":6,"./src/Edit.Rectangle.Drag":7,"./src/Edit.SimpleShape.Drag":8,"./src/EditToolbar.Edit":9,"leaflet":12,"leaflet-draw":4,"leaflet-path-drag":11}],4:[function(require,module,exports){
+},{"./src/Edit.Circle.Drag":5,"./src/Edit.Poly.Drag":6,"./src/Edit.Rectangle.Drag":7,"./src/Edit.SimpleShape.Drag":8,"./src/EditToolbar.Edit":9,"leaflet":13,"leaflet-draw":4,"leaflet-path-drag":11}],4:[function(require,module,exports){
 /*
  Leaflet.draw 0.4.14, a plugin that adds drawing and editing tools to Leaflet powered maps.
  (c) 2012-2017, Jacob Toye, Jon West, Smartrak, Leaflet
@@ -769,7 +793,315 @@ this._selectedPathOptions&&(e instanceof L.Marker?this._toggleMarkerHighlight(e)
  * @preserve
  */n.Path.include({_transform:function(t){return this._renderer&&(t?this._renderer.transformPath(this,t):(this._renderer._resetTransformPath(this),this._update())),this},_onMouseClick:function(t){this.dragging&&this.dragging.moved()||this._map.dragging&&this._map.dragging.moved()||this._fireMouseEvent(t)}});const f={mousedown:"mouseup",touchstart:"touchend",pointerdown:"touchend",MSPointerDown:"touchend"},l={mousedown:"mousemove",touchstart:"touchmove",pointerdown:"touchmove",MSPointerDown:"touchmove"};function P(t,s){const i=t.x-s.x,a=t.y-s.y;return Math.sqrt(i*i+a*a)}return n.Handler.PathDrag=n.Handler.extend({statics:{DRAGGING_CLS:"leaflet-path-draggable"},initialize:function(t){this._path=t,this._matrix=null,this._startPoint=null,this._dragStartPoint=null,this._mapDraggingWasEnabled=!1,this._path._dragMoved=!1},addHooks:function(){this._path.on("mousedown",this._onDragStart,this),this._path.options.className=this._path.options.className?this._path.options.className+" "+n.Handler.PathDrag.DRAGGING_CLS:n.Handler.PathDrag.DRAGGING_CLS,this._path._path&&n.DomUtil.addClass(this._path._path,n.Handler.PathDrag.DRAGGING_CLS)},removeHooks:function(){this._path.off("mousedown",this._onDragStart,this),this._path.options.className=this._path.options.className.replace(new RegExp("\\s+"+n.Handler.PathDrag.DRAGGING_CLS),""),this._path._path&&n.DomUtil.removeClass(this._path._path,n.Handler.PathDrag.DRAGGING_CLS)},moved:function(){return this._path._dragMoved},_onDragStart:function(t){const s=t.originalEvent._simulated?"touchstart":t.originalEvent.type;this._mapDraggingWasEnabled=!1,this._startPoint=t.containerPoint.clone(),this._dragStartPoint=t.containerPoint.clone(),this._matrix=[1,0,0,1,0,0],n.DomEvent.stop(t.originalEvent),n.DomUtil.addClass(this._path._renderer._container,"leaflet-interactive"),n.DomEvent.on(document,l[s],this._onDrag,this).on(document,f[s],this._onDragEnd,this),this._path._map.dragging.enabled()&&(this._path._map.dragging.disable(),this._mapDraggingWasEnabled=!0),this._path._dragMoved=!1,this._path._popup&&this._path._popup.close(),this._replaceCoordGetters(t)},_onDrag:function(t){n.DomEvent.stop(t);const s=t.touches&&t.touches.length>=1?t.touches[0]:t,i=this._path._map.mouseEventToContainerPoint(s);if(t.type==="touchmove"&&!this._path._dragMoved&&this._dragStartPoint.distanceTo(i)<=this._path._map.options.tapTolerance)return;const a=i.x,h=i.y,o=a-this._startPoint.x,e=h-this._startPoint.y;(o||e)&&(this._path._dragMoved||(this._path._dragMoved=!0,this._path.options.interactive=!1,this._path._map.dragging._draggable._moved=!0,this._path.fire("dragstart",t),this._path.bringToFront()),this._matrix[4]+=o,this._matrix[5]+=e,this._startPoint.x=a,this._startPoint.y=h,this._path.fire("predrag",t),this._path._transform(this._matrix),this._path.fire("drag",t))},_onDragEnd:function(t){const s=this._path._map.mouseEventToContainerPoint(t),i=this.moved();if(i&&(this._transformPoints(this._matrix),this._path._updatePath(),this._path._project(),this._path._transform(null),n.DomEvent.stop(t)),n.DomEvent.off(document,"mousemove touchmove",this._onDrag,this),n.DomEvent.off(document,"mouseup touchend",this._onDragEnd,this),this._restoreCoordGetters(),i){this._path.fire("dragend",{distance:P(this._dragStartPoint,s)});const a=this._path._containsPoint;this._path._containsPoint=n.Util.falseFn,n.Util.requestAnimFrame(function(){this._path._dragMoved=!1,this._path.options.interactive=!0,this._path._containsPoint=a},this)}this._mapDraggingWasEnabled&&this._path._map.dragging.enable()},_transformPoints:function(t,s){const i=this._path,a=L.point(t[4],t[5]),h=i._map.options.crs,o=h.transformation,e=h.scale(i._map.getZoom()),r=h.projection,_=o.untransform(a,e).subtract(o.untransform(n.point(0,0),e)),p=!s;if(i._bounds=new n.LatLngBounds,i._point)s=r.unproject(r.project(i._latlng)._add(_)),p&&(i._latlng=s,i._point._add(a));else if(i._rings||i._parts){const m=i._rings||i._parts;let d=i._latlngs;s=s||d,n.Util.isArray(d[0])||(d=[d],s=[s]);for(let g=0,D=m.length;g<D;g++){s[g]=s[g]||[];for(let c=0,x=m[g].length;c<x;c++){const v=d[g][c];s[g][c]=r.unproject(r.project(v)._add(_)),p&&(i._bounds.extend(d[g][c]),m[g][c]._add(a))}}}return s},_replaceCoordGetters:function(){this._path.getLatLng?(this._path.getLatLng_=this._path.getLatLng,this._path.getLatLng=n.Util.bind(function(){return this.dragging._transformPoints(this.dragging._matrix,{})},this._path)):this._path.getLatLngs&&(this._path.getLatLngs_=this._path.getLatLngs,this._path.getLatLngs=n.Util.bind(function(){return this.dragging._transformPoints(this.dragging._matrix,[])},this._path))},_restoreCoordGetters:function(){this._path.getLatLng_?(this._path.getLatLng=this._path.getLatLng_,delete this._path.getLatLng_):this._path.getLatLngs_&&(this._path.getLatLngs=this._path.getLatLngs_,delete this._path.getLatLngs_)}}),n.Handler.PathDrag.makeDraggable=function(t){return t.dragging=new n.Handler.PathDrag(t),t},n.Path.prototype.makeDraggable=function(){return n.Handler.PathDrag.makeDraggable(this)},n.Path.addInitHook(function(){this.options.draggable?(this.options.interactive=!0,this.dragging?this.dragging.enable():(n.Handler.PathDrag.makeDraggable(this),this.dragging.enable())):this.dragging&&this.dragging.disable()}),n.Handler.PathDrag});
 
-},{"leaflet":12}],12:[function(require,module,exports){
+},{"leaflet":13}],12:[function(require,module,exports){
+"use strict";
+
+L.Realtime = L.Layer.extend({
+    options: {
+        start: true,
+        interval: 60 * 1000,
+        getFeatureId: function(f) {
+            return f.properties.id;
+        },
+        updateFeature: function(feature, oldLayer) {
+            if (!oldLayer) { return; }
+
+            var type = feature.geometry && feature.geometry.type
+            var coordinates = feature.geometry && feature.geometry.coordinates
+            switch (type) {
+                case 'Point':
+                    oldLayer.setLatLng(L.GeoJSON.coordsToLatLng(coordinates));
+                    break;
+                case 'LineString':
+                case 'MultiLineString':
+                    oldLayer.setLatLngs(L.GeoJSON.coordsToLatLngs(coordinates, type === 'LineString' ? 0 : 1));
+                    break;
+                case 'Polygon':
+                case 'MultiPolygon':
+                    oldLayer.setLatLngs(L.GeoJSON.coordsToLatLngs(coordinates, type === 'Polygon' ? 1 : 2));
+                    break;
+                default:
+                    return null;
+            }
+            return oldLayer;
+          },
+        logErrors: true,
+        cache: false,
+        removeMissing: true,
+        onlyRunWhenAdded: false
+    },
+
+    initialize: function(src, options) {
+        L.setOptions(this, options);
+        this._container = options.container || L.geoJson(null, options);
+
+        if (typeof(src) === 'function') {
+            this._src = src;
+        } else {
+            this._fetchOptions = src && src.url ? src : {url: src};
+            this._src = L.bind(this._defaultSource, this);
+        }
+
+        this._features = {};
+        this._featureLayers = {};
+        this._requestCount = 0;
+
+        if (this.options.start && !this.options.onlyRunWhenAdded) {
+            this.start();
+        }
+    },
+
+    start: function() {
+        if (!this._timer) {
+            this._timer = setInterval(L.bind(this.update, this),
+                this.options.interval);
+            this.update();
+        }
+
+        return this;
+    },
+
+    stop: function() {
+        if (this._timer) {
+            clearTimeout(this._timer);
+            delete this._timer;
+        }
+
+        return this;
+    },
+
+    isRunning: function() {
+        return this._timer;
+    },
+    
+    setUrl: function (url) {
+        if (this._fetchOptions) {
+            this._fetchOptions.url = url;
+            this.update();
+        } else {
+            throw new Error('Custom sources does not support setting URL.');
+        }
+    },    
+
+    update: function(geojson) {
+        var requestCount = ++this._requestCount,
+            checkRequestCount = L.bind(function(cb) {
+                return L.bind(function() {
+                    if (requestCount === this._requestCount) {
+                        return cb.apply(this, arguments);
+                    }
+                }, this);
+            }, this),
+            responseHandler,
+            errorHandler;
+
+        if (geojson) {
+            this._onNewData(false, geojson);
+        } else {
+            responseHandler = L.bind(function(data) { this._onNewData(this.options.removeMissing, data); }, this);
+            errorHandler = L.bind(this._onError, this);
+
+            this._src(checkRequestCount(responseHandler), checkRequestCount(errorHandler));
+        }
+
+        return this;
+    },
+
+    remove: function(geojson) {
+        var features = L.Util.isArray(geojson) ? geojson : geojson.features ? geojson.features : [geojson],
+            exit = {},
+            i,
+            len,
+            fId;
+
+        for (i = 0, len = features.length; i < len; i++) {
+            fId = this.options.getFeatureId(features[i]);
+            this._container.removeLayer(this._featureLayers[fId]);
+            exit[fId] = this._features[fId];
+            delete this._features[fId];
+            delete this._featureLayers[fId];
+        }
+
+        this.fire('update', {
+            features: this._features,
+            enter: {},
+            update: {},
+            exit: exit
+        });
+
+        return this;
+    },
+
+    getLayer: function(featureId) {
+        return this._featureLayers[featureId];
+    },
+
+    getFeature: function(featureId) {
+        return this._features[featureId];
+    },
+
+    getBounds: function() {
+        var container = this._container;
+        if (container.getBounds) {
+            return container.getBounds();
+        }
+
+        throw new Error('Container has no getBounds method');
+    },
+
+    onAdd: function(map) {
+        map.addLayer(this._container);
+        if (this.options.start) {
+            this.start();
+        }
+    },
+
+    onRemove: function(map) {
+        if (this.options.onlyRunWhenAdded) {
+            this.stop();
+        }
+        
+        map.removeLayer(this._container);
+    },
+
+    _onNewData: function(removeMissing, geojson) {
+        var layersToRemove = [],
+            enter = {},
+            update = {},
+            exit = {},
+            seenFeatures = {},
+            i, len, feature;
+
+        var handleData = L.bind(function(geojson) {
+            var features = L.Util.isArray(geojson) ? geojson : geojson.features;
+            if (features) {
+                for (i = 0, len = features.length; i < len; i++) {
+                    // only add this if geometry or geometries are set and not null
+                    feature = features[i];
+                    if (feature.geometries || feature.geometry || feature.features || feature.coordinates) {
+                        handleData(feature);
+                    }
+                }
+                return;
+            }
+
+            var container = this._container;
+            var options = this.options;
+
+            if (options.filter && !options.filter(geojson)) { return; }
+
+            var f = L.GeoJSON.asFeature(geojson);
+            var fId = options.getFeatureId(f);
+            var oldLayer = this._featureLayers[fId];
+
+            var layer = this.options.updateFeature(f, oldLayer);
+            if (!layer) {
+                layer = L.GeoJSON.geometryToLayer(geojson, options);
+                if (!layer) {
+                    return;
+                }
+                layer.defaultOptions = layer.options;
+                layer.feature = f;
+
+                if (options.onEachFeature) {
+                    options.onEachFeature(geojson, layer);
+                }
+
+                if (options.style && layer.setStyle) {
+                    layer.setStyle(options.style(geojson));
+                }
+
+            }
+
+            layer.feature = f;
+            if (container.resetStyle) {
+                container.resetStyle(layer);
+            }
+
+            if (oldLayer) {
+                update[fId] = geojson;
+                if (oldLayer != layer) {
+                    layersToRemove.push(oldLayer);
+                    container.addLayer(layer);
+                }
+            } else {
+                enter[fId] = geojson;
+                container.addLayer(layer);
+            }
+
+            this._featureLayers[fId] = layer;
+            this._features[fId] = seenFeatures[fId] = f;
+        }, this);
+
+        handleData(geojson);
+
+        if (removeMissing) {
+            exit = this._removeUnknown(seenFeatures);
+        }
+        for (i = 0; i < layersToRemove.length; i++) {
+            this._container.removeLayer(layersToRemove[i]);
+        }
+
+        this.fire('update', {
+            features: this._features,
+            enter: enter,
+            update: update,
+            exit: exit
+        });
+    },
+
+    _onError: function(err, msg) {
+        if (this.options.logErrors) {
+            console.warn(err, msg);
+        }
+
+        this.fire('error', {
+            error: err,
+            message: msg
+        });
+    },
+
+    _removeUnknown: function(known) {
+        var fId,
+            removed = {};
+        for (fId in this._featureLayers) {
+            if (!known[fId]) {
+                this._container.removeLayer(this._featureLayers[fId]);
+                removed[fId] = this._features[fId];
+                delete this._featureLayers[fId];
+                delete this._features[fId];
+            }
+        }
+
+        return removed;
+    },
+
+    _bustCache: function(url) {
+        return url + L.Util.getParamString({'_': new Date().getTime()}, url);
+    },
+
+    _defaultSource: function(responseHandler, errorHandler) {
+        var fetchOptions = this._fetchOptions,
+            url = fetchOptions.url;
+        
+        url = this.options.cache ? url : this._bustCache(url);
+
+        fetch(url, fetchOptions)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(responseHandler)
+        .catch(errorHandler);
+    }
+});
+
+L.realtime = function(src, options) {
+    return new L.Realtime(src, options);
+};
+
+module.exports = L.Realtime;
+
+},{}],13:[function(require,module,exports){
 /* @preserve
  * Leaflet 1.9.4, a JS library for interactive maps. https://leafletjs.com
  * (c) 2010-2023 Vladimir Agafonkin, (c) 2010-2011 CloudMade
@@ -15283,20 +15615,77 @@ this._selectedPathOptions&&(e instanceof L.Marker?this._toggleMarkerHighlight(e)
 }));
 
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 // Import the leaflet package
 const L = require('leaflet');
 require('leaflet-draw');
 require('leaflet-draw-drag')
+require('leaflet-realtime')
 const {createFormPopup,fetchShapes, createLayerFromShape, saveShape} = require('./loadDataMap');
 //const iconUrl = require('./assets/fire.png');
 const imageUrls = require('./imageUrls');
 
 // Map initialization
 const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
-// Initialize the FeatureGroup to store editable layers
+const UPDATE_INTERVAL = 30000; // 10 seconds, adjust as needed
+const BOUNDING_BOX = [37.8, 23.5, 38.1, 24.2]; // Approximate bounding box for Athens area
+
+// Create a layer group to hold our markers
+const flightLayer = L.layerGroup().addTo(map);
+
+function updateFlights() {
+    const url = '/flights'; // This now matches your server route
+  
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Parsed data:', data);
+  
+        // Clear existing markers
+        flightLayer.clearLayers();
+  
+        if (!Array.isArray(data) || data.length === 0) {
+          console.log('No flight data available');
+          return;
+        }
+  
+        // Add new markers
+        data.forEach(aircraft => {
+          if (aircraft.lat && aircraft.lon) {
+            const marker = L.marker([aircraft.lat, aircraft.lon]);
+            
+            const popupContent = `
+              ICAO: ${aircraft.hex || 'Unknown'}<br>
+              Type: ${aircraft.t || 'Unknown'}<br>
+              Altitude: ${aircraft.alt_baro || 'Unknown'} ft<br>
+              Speed: ${aircraft.gs || 'Unknown'} knots<br>
+              Heading: ${aircraft.track || 'Unknown'}°
+            `;
+            marker.bindPopup(popupContent);
+            
+            flightLayer.addLayer(marker);
+          }
+        });
+      })
+      .catch(err => {
+        console.error('Error fetching flight data:', err);
+      });
+  }
+  
+  // Initial update
+  updateFlights();
+  
+  // Set interval for updates
+  setInterval(updateFlights, UPDATE_INTERVAL);
+
 const drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
+
 
 async function loadShapes() {
     console.log('Loading shapes...');
@@ -15396,10 +15785,20 @@ async function initializeMap() {
 
     map.on('draw:created', function (e) {
         const layer = e.layer;
-        const shape = layer;
+        //const shape = layer;
+        let shapeData;
         //alert(layer);
+        // if (e.layerType === 'circle') {
+        //     //shape.properties.radius = layer.getRadius();
+        // }
         if (e.layerType === 'circle') {
-            shape.properties.radius = layer.getRadius();
+            shapeData = {
+                type: 'Circle',
+                coordinates: [layer.getLatLng().lng, layer.getLatLng().lat],
+                radius: layer.getRadius()
+            };
+        } else {
+            shapeData = layer.toGeoJSON().geometry;
         }
         drawnItems.addLayer(layer);
         layer.bindPopup(createFormPopup()).openPopup();
@@ -15409,10 +15808,16 @@ async function initializeMap() {
             e.preventDefault();
             const name = document.getElementById('input_name').value;
             const description = document.getElementById('input_desc').value;
+            
+            shapeData.name = name;
+            shapeData.description = description;
             try {
-                const savedShape = await saveShape(shape, name, description);
+                const savedShape = await saveShape(shapeData);
                 console.log('Drawing saved:', savedShape);
-                layer.setPopupContent(`Name: ${name}<br>Description: ${description}`);
+                layer.id = saveShape.id;
+                layer.bindPopup(`Name: ${name}<br>Description: ${description}`);
+                layer.bindPopup(`Name: ${name}<br>Description: ${description}`);
+                //layer.setPopupContent(`Name: ${name}<br>Description: ${description}`);
             } catch (error) {
                 console.error('Error saving drawing:', error);
                 layer.setPopupContent('Error saving drawing. Please try again.');
@@ -15433,6 +15838,8 @@ async function initializeMap() {
         } else {
             shapeData = layer.toGeoJSON().geometry;
         }
+        console.log(`Sending PUT request to: http://localhost:3000/shapes/${id}`);
+        console.log('Shape data:', shapeData);
     
         // Send updated shape data to server
         fetch(`http://localhost:3000/shapes/${id}`, {
@@ -15455,7 +15862,7 @@ async function initializeMap() {
         const id = layer.id;
     
         // Send delete request to server
-        fetch(`/api/shapes/${id}`, {
+        fetch(`/shapes/${id}`, {
             method: 'DELETE',
         })
         .then(response => response.json())
@@ -15525,4 +15932,4 @@ initializeMap();
 
 
 
-},{"./imageUrls":1,"./loadDataMap":2,"leaflet":12,"leaflet-draw":10,"leaflet-draw-drag":3}]},{},[13]);
+},{"./imageUrls":1,"./loadDataMap":2,"leaflet":13,"leaflet-draw":10,"leaflet-draw-drag":3,"leaflet-realtime":12}]},{},[14]);

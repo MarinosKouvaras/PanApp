@@ -2,15 +2,70 @@
 const L = require('leaflet');
 require('leaflet-draw');
 require('leaflet-draw-drag')
+require('leaflet-realtime')
 const {createFormPopup,fetchShapes, createLayerFromShape, saveShape} = require('./loadDataMap');
 //const iconUrl = require('./assets/fire.png');
 const imageUrls = require('./imageUrls');
 
 // Map initialization
 const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
-// Initialize the FeatureGroup to store editable layers
+const UPDATE_INTERVAL = 10000; // 10 seconds, adjust as needed
+const BOUNDING_BOX = [37.8, 23.5, 38.1, 24.2]; // Approximate bounding box for Athens area
+
+// Create a layer group to hold our markers
+const flightLayer = L.layerGroup().addTo(map);
+
+function updateFlights() {
+    const url = '/flights'; // This now matches your server route
+  
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Parsed data:', data);
+  
+        // Clear existing markers
+        flightLayer.clearLayers();
+  
+        if (!Array.isArray(data.ac) || data.ac.length === 0) {
+          console.log('No flight data available');
+          return;
+        }
+  
+        // Add new markers
+        data.ac.forEach(aircraft => {
+          if (aircraft.lat && aircraft.lon) {
+            const marker = L.marker([aircraft.lat, aircraft.lon]);
+            
+            const popupContent = `
+              ICAO: ${aircraft.hex || 'Unknown'}<br>
+              Type: ${aircraft.t || 'Unknown'}<br>
+              Altitude: ${aircraft.alt_baro || 'Unknown'} ft<br>
+              Speed: ${aircraft.gs || 'Unknown'} knots<br>
+              Heading: ${aircraft.track || 'Unknown'}°
+            `;
+            marker.bindPopup(popupContent);
+            
+            flightLayer.addLayer(marker);
+          }
+        });
+      })
+      .catch(err => {
+        console.error('Error fetching flight data:', err);
+      });
+  }
+  
+updateFlights();
+setInterval(updateFlights, UPDATE_INTERVAL);
+
+
 const drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
+
 
 async function loadShapes() {
     console.log('Loading shapes...');
@@ -110,10 +165,20 @@ async function initializeMap() {
 
     map.on('draw:created', function (e) {
         const layer = e.layer;
-        const shape = layer;
+        //const shape = layer;
+        let shapeData;
         //alert(layer);
+        // if (e.layerType === 'circle') {
+        //     //shape.properties.radius = layer.getRadius();
+        // }
         if (e.layerType === 'circle') {
-            shape.properties.radius = layer.getRadius();
+            shapeData = {
+                type: 'Circle',
+                coordinates: [layer.getLatLng().lng, layer.getLatLng().lat],
+                radius: layer.getRadius()
+            };
+        } else {
+            shapeData = layer.toGeoJSON().geometry;
         }
         drawnItems.addLayer(layer);
         layer.bindPopup(createFormPopup()).openPopup();
@@ -123,10 +188,16 @@ async function initializeMap() {
             e.preventDefault();
             const name = document.getElementById('input_name').value;
             const description = document.getElementById('input_desc').value;
+            
+            shapeData.name = name;
+            shapeData.description = description;
             try {
-                const savedShape = await saveShape(shape, name, description);
+                const savedShape = await saveShape(shapeData);
                 console.log('Drawing saved:', savedShape);
-                layer.setPopupContent(`Name: ${name}<br>Description: ${description}`);
+                layer.id = saveShape.id;
+                layer.bindPopup(`Name: ${name}<br>Description: ${description}`);
+                layer.bindPopup(`Name: ${name}<br>Description: ${description}`);
+                //layer.setPopupContent(`Name: ${name}<br>Description: ${description}`);
             } catch (error) {
                 console.error('Error saving drawing:', error);
                 layer.setPopupContent('Error saving drawing. Please try again.');

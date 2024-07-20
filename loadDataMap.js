@@ -141,28 +141,50 @@ function createLayerFromShape(shape) {
 //         throw error;
 //     }
 // }
-async function saveShape(layer, name, description) {
-    let data;
-    const geoJSON = layer.toGeoJSON();
+// async function saveShape(layer, name, description) {
+//     let data;
+//     const geoJSON = layer.toGeoJSON();
 
-    if (layer instanceof L.Circle) {
-        data = {
-            type: 'Circle',
-            coordinates: JSON.stringify([layer.getLatLng().lng, layer.getLatLng().lat]),
-            radius: layer.getRadius(),
-            name: name,
-            description: description,
-        };
-    } else {
-        data = {
-            type: geoJSON.geometry.type,
-            coordinates: JSON.stringify(geoJSON.geometry.coordinates),
-            name: name,
-            description: description,
-        };
-    }
+//     if (layer instanceof L.Circle) {
+//         data = {
+//             type: 'Circle',
+//             coordinates: JSON.stringify([layer.getLatLng().lng, layer.getLatLng().lat]),
+//             radius: layer.getRadius(),
+//             name: name,
+//             description: description,
+//         };
+//     } else {
+//         data = {
+//             type: geoJSON.geometry.type,
+//             coordinates: JSON.stringify(geoJSON.geometry.coordinates),
+//             name: name,
+//             description: description,
+//         };
+//     }
 
-    console.log('Sending shape data:', data);
+//     console.log('Sending shape data:', data);
+
+//     try {
+//         const response = await fetch('http://localhost:3000/shapes', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify(data),
+//         });
+//         if (!response.ok) {
+//             const errorText = await response.text();
+//             throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+//         }
+//         return response.json();
+//     } catch (error) {
+//         console.error('Error saving shape:', error);
+//         throw error;
+//     }
+// }
+
+async function saveShape(shapeData) {
+    console.log('Sending shape data:', shapeData);
 
     try {
         const response = await fetch('http://localhost:3000/shapes', {
@@ -170,7 +192,7 @@ async function saveShape(layer, name, description) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify(shapeData),
         });
         if (!response.ok) {
             const errorText = await response.text();
