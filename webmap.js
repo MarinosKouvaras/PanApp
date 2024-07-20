@@ -6,6 +6,8 @@ require('leaflet-realtime')
 const {createFormPopup,fetchShapes, createLayerFromShape, saveShape} = require('./loadDataMap');
 const {loadFires} = require('./loadFireData');
 const imageUrls = require('./imageUrls');
+const { loadFlights } = require('./loadFlightData');
+
 
 // Map initialization
 const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
@@ -15,54 +17,12 @@ const BOUNDING_BOX = [37.8, 23.5, 38.1, 24.2]; // Approximate bounding box for A
 // Create a layer group to hold our markers
 //const fireLayer = L.layerGroup().addTo(map);
 const fireLayer = L.layerGroup();
-const flightLayer = L.layerGroup().addTo(map);
+const flightLayer = L.layerGroup();
 
-function updateFlights() {
-    const url = '/flights'; // This now matches your server route
+
   
-    fetch(url)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Parsed data:', data);
-  
-        // Clear existing markers
-        flightLayer.clearLayers();
-  
-        if (!Array.isArray(data.ac) || data.ac.length === 0) {
-          console.log('No flight data available');
-          return;
-        }
-  
-        // Add new markers
-        data.ac.forEach(aircraft => {
-          if (aircraft.lat && aircraft.lon) {
-            const marker = L.marker([aircraft.lat, aircraft.lon]);
-            
-            const popupContent = `
-              ICAO: ${aircraft.hex || 'Unknown'}<br>
-              Type: ${aircraft.t || 'Unknown'}<br>
-              Altitude: ${aircraft.alt_baro || 'Unknown'} ft<br>
-              Speed: ${aircraft.gs || 'Unknown'} knots<br>
-              Heading: ${aircraft.track || 'Unknown'}°
-            `;
-            marker.bindPopup(popupContent);
-            
-            flightLayer.addLayer(marker);
-          }
-        });
-      })
-      .catch(err => {
-        console.error('Error fetching flight data:', err);
-      });
-  }
-  
-updateFlights();
-setInterval(updateFlights, UPDATE_INTERVAL);
+//updateFlights();
+//setInterval(updateFlights, UPDATE_INTERVAL);
 
 
 const drawnItems = new L.FeatureGroup();
@@ -92,16 +52,6 @@ async function loadShapes() {
 }
 
 async function initializeMap() {
-    try {
-        await loadFires(fireLayer);
-        map.addLayer(fireLayer);
-        console.log('Fire layer added to map');
-    } catch (error) {
-        console.error('Error loading fires:', error);
-    }
-    await loadShapes();
-    console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
-
     // Base layer definitions
     const baseLayers = {
         "OpenStreet": L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -119,6 +69,30 @@ async function initializeMap() {
             maxZoom: 22,
         })
     };
+    baseLayers["OpenStreet"].addTo(map);
+
+
+
+
+    try {
+        await loadFires(fireLayer);
+        map.addLayer(fireLayer);
+        console.log('Fire layer added to map');
+    } catch (error) {
+        console.error('Error loading fires:', error);
+    }
+
+    try {
+        await loadFlights(flightLayer);
+        map.addLayer(flightLayer);
+        console.log('Flights layer added to map');
+    } catch (error) {
+        console.log('Error loading flights', error);
+    }
+    await loadShapes();
+    console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
+
+    
 
     
 
@@ -128,13 +102,13 @@ async function initializeMap() {
     
     let overlayAirports = {
     "Airports": airports,
-    "Fires": fireLayer
+    "Fires": fireLayer,
+    "Flights": flightLayer
     };
 
     // Add layer control to map
     L.control.layers(baseLayers, overlayAirports).addTo(map);
-    baseLayers["OpenStreet"].addTo(map);
-
+    
     const drawController = new L.Control.Draw({
         edit: {
             featureGroup: drawnItems,
@@ -276,47 +250,9 @@ async function initializeMap() {
             deleteShape(layer);
         });
     });
-
-    
-
-    // Specify the path to your custom icon image
-    // const fireIcon = L.icon({
-    //     iconUrl: imageUrls.fireIcon,
-    //     iconSize: [38, 95], // size of the icon
-    //     iconAnchor: [22, 94], // point of the icon which will correspond to marker's location
-    //     popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
-    // });
-
-
-//     fetch('https://firms.modaps.eosdis.nasa.gov/api/country/csv/2c0278b3819dba0978450671b302b2a6/VIIRS_NOAA20_NRT/GRC/1/2024-07-20')
-//   .then(response => response.text())
-//   .then(data => {
-//     // Step 2: Parse CSV Data
-//     const rows = data.trim().split('\n');
-//     const headers = rows[0].split(',');
-
-//     const fireData = rows.slice(1).map(row => {
-//       const rowData = row.split(',');
-//       const entry = {};
-//       headers.forEach((header, index) => {
-//         entry[header] = rowData[index];
-//       });
-//       return entry;
-//     });
-
-//     // Step 3: Plot Data on Leaflet Map
-//     fireData.forEach(fire => {
-//       const latitude = parseFloat(fire.latitude);
-//       const longitude = parseFloat(fire.longitude);
-
-//       if (!isNaN(latitude) && !isNaN(longitude)) {
-//         L.marker([latitude, longitude], {icon: fireIcon}).addTo(map)
-//           .bindPopup(`<b>Fire Location:</b><br>${latitude}, ${longitude}`);
-//       }
-//     });
-//   })
-//   .catch(error => console.error('Error fetching data:', error));    
+   
 }
+
 
 initializeMap();
 
