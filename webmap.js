@@ -4,7 +4,7 @@ require('leaflet-draw');
 require('leaflet-draw-drag')
 require('leaflet-realtime')
 const {createFormPopup,fetchShapes, createLayerFromShape, saveShape} = require('./loadDataMap');
-//const iconUrl = require('./assets/fire.png');
+const {loadFires} = require('./loadFireData');
 const imageUrls = require('./imageUrls');
 
 // Map initialization
@@ -13,6 +13,8 @@ const UPDATE_INTERVAL = 10000; // 10 seconds, adjust as needed
 const BOUNDING_BOX = [37.8, 23.5, 38.1, 24.2]; // Approximate bounding box for Athens area
 
 // Create a layer group to hold our markers
+//const fireLayer = L.layerGroup().addTo(map);
+const fireLayer = L.layerGroup();
 const flightLayer = L.layerGroup().addTo(map);
 
 function updateFlights() {
@@ -90,6 +92,13 @@ async function loadShapes() {
 }
 
 async function initializeMap() {
+    try {
+        await loadFires(fireLayer);
+        map.addLayer(fireLayer);
+        console.log('Fire layer added to map');
+    } catch (error) {
+        console.error('Error loading fires:', error);
+    }
     await loadShapes();
     console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
 
@@ -118,7 +127,8 @@ async function initializeMap() {
     const airports = L.layerGroup([lgtt]);
     
     let overlayAirports = {
-    "Airports": airports
+    "Airports": airports,
+    "Fires": fireLayer
     };
 
     // Add layer control to map
@@ -270,42 +280,42 @@ async function initializeMap() {
     
 
     // Specify the path to your custom icon image
-    const fireIcon = L.icon({
-        iconUrl: imageUrls.fireIcon,
-        iconSize: [38, 95], // size of the icon
-        iconAnchor: [22, 94], // point of the icon which will correspond to marker's location
-        popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
-    });
+    // const fireIcon = L.icon({
+    //     iconUrl: imageUrls.fireIcon,
+    //     iconSize: [38, 95], // size of the icon
+    //     iconAnchor: [22, 94], // point of the icon which will correspond to marker's location
+    //     popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
+    // });
 
 
-    fetch('https://firms.modaps.eosdis.nasa.gov/api/country/csv/2c0278b3819dba0978450671b302b2a6/VIIRS_NOAA21_NRT/GRC/10/2024-07-16')
-  .then(response => response.text())
-  .then(data => {
-    // Step 2: Parse CSV Data
-    const rows = data.trim().split('\n');
-    const headers = rows[0].split(',');
+//     fetch('https://firms.modaps.eosdis.nasa.gov/api/country/csv/2c0278b3819dba0978450671b302b2a6/VIIRS_NOAA20_NRT/GRC/1/2024-07-20')
+//   .then(response => response.text())
+//   .then(data => {
+//     // Step 2: Parse CSV Data
+//     const rows = data.trim().split('\n');
+//     const headers = rows[0].split(',');
 
-    const fireData = rows.slice(1).map(row => {
-      const rowData = row.split(',');
-      const entry = {};
-      headers.forEach((header, index) => {
-        entry[header] = rowData[index];
-      });
-      return entry;
-    });
+//     const fireData = rows.slice(1).map(row => {
+//       const rowData = row.split(',');
+//       const entry = {};
+//       headers.forEach((header, index) => {
+//         entry[header] = rowData[index];
+//       });
+//       return entry;
+//     });
 
-    // Step 3: Plot Data on Leaflet Map
-    fireData.forEach(fire => {
-      const latitude = parseFloat(fire.latitude);
-      const longitude = parseFloat(fire.longitude);
+//     // Step 3: Plot Data on Leaflet Map
+//     fireData.forEach(fire => {
+//       const latitude = parseFloat(fire.latitude);
+//       const longitude = parseFloat(fire.longitude);
 
-      if (!isNaN(latitude) && !isNaN(longitude)) {
-        L.marker([latitude, longitude], {icon: fireIcon}).addTo(map)
-          .bindPopup(`<b>Fire Location:</b><br>${latitude}, ${longitude}`);
-      }
-    });
-  })
-  .catch(error => console.error('Error fetching data:', error));    
+//       if (!isNaN(latitude) && !isNaN(longitude)) {
+//         L.marker([latitude, longitude], {icon: fireIcon}).addTo(map)
+//           .bindPopup(`<b>Fire Location:</b><br>${latitude}, ${longitude}`);
+//       }
+//     });
+//   })
+//   .catch(error => console.error('Error fetching data:', error));    
 }
 
 initializeMap();

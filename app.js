@@ -8,6 +8,7 @@ const cors = require('cors');
 
 const drawingsRouter = require('./routes/drawings');
 const shapeRoutes = require('./routes/shapes');
+const fireRouter = require('./routes/fireRouter');
 const flightRouter = require('./routes/flightRouter');
 
 
@@ -24,6 +25,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.use('/drawings', drawingsRouter);
 app.use('/shapes', shapeRoutes);
+app.use('/fires', fireRouter);
 app.use('/flights', flightRouter);
 
 // catch 404 and forward to error handler
