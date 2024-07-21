@@ -2,6 +2,8 @@ const L = require('leaflet');
 const imageUrls = require('./imageUrls');
 require('leaflet-rotatedmarker');
 
+let currentADSB=[];
+
 function loadADSB(existingLayer) {
     const adsbLayer = existingLayer || new L.layerGroup();
 
@@ -54,6 +56,14 @@ function loadADSB(existingLayer) {
                         `);
 
                         adsbLayer.addLayer(adsbMarker);
+                        currentADSB.push({
+                            id: callsign || icao24,
+                            latitude: latitude,
+                            longitude: longitude,
+                            altitude: baro_altitude,
+                            speed: velocity,
+                            track: true_track
+                        });
                     }                    
                 });
                 resolve(adsbLayer);
@@ -65,7 +75,12 @@ function loadADSB(existingLayer) {
     });
 }
 
+function getCurrentADSB() {
+    return currentADSB;
+}
+
 module.exports = {
     loadADSB,
+    getCurrentADSB,
 };
 

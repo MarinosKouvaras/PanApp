@@ -3,16 +3,18 @@ const L = require('leaflet');
 require('leaflet-draw');
 require('leaflet-draw-drag')
 require('leaflet-realtime')
+const turf = require('@turf/turf');
 const {createFormPopup,fetchShapes, createLayerFromShape, saveShape} = require('./loadDataMap');
 const {loadFires} = require('./loadFireData');
 const imageUrls = require('./imageUrls');
 const { loadFlights } = require('./loadFlightData');
-const { loadADSB } = require('./loadADSB');
+const { loadADSB, getCurrentADSB } = require('./loadADSB');
 
 
 const UPDATE_INTERVAL = 10000;
 
 const drawnItems = new L.FeatureGroup();
+
 async function loadShapes() {
     console.log('Loading shapes...');
     const shapes = await fetchShapes();
@@ -181,6 +183,7 @@ async function initializeMap() {
 
     setInterval(() => loadFlights(flightLayer), UPDATE_INTERVAL);
     setInterval(() => loadADSB(adsbLayer), UPDATE_INTERVAL);
+    setInterval(() => checkADSBInShapes(), UPDATE_INTERVAL);
 
     function updateShape(layer) {
         const id = layer.id;
@@ -243,6 +246,34 @@ async function initializeMap() {
             deleteShape(layer);
         });
     });
+
+    async function checkADSBInShapes() {
+        try {
+            const adsbData = await getCurrentADSB();
+            const drawnLayers = drawnItems.getLayers();
+    
+            adsbData.forEach(adsbPoint => {
+                const point = turf.point([adsbPoint.longitude, adsbPoint.latitude]);
+    
+                drawnLayers.forEach(layer => {
+                    let shape;
+    
+                    if (layer instanceof L.Circle) {
+                        const center = layer.getLatLng();
+                        shape = turf.circle([center.lng, center.lat], layer.getRadius() / 1000, { units: 'kilometers' });
+                    } else {
+                        shape = layer.toGeoJSON().geometry;
+                    }
+    
+                    if (turf.booleanPointInPolygon(point, shape)) {
+                        alert(`Airplane ${adsbPoint.id} is within a drawn shape!`);
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Error checking ADSB data within shapes:', error);
+        }
+    }
    
 }
 
