@@ -4,62 +4,51 @@ require('leaflet-draw');
 require('leaflet-draw-drag')
 require('leaflet-realtime')
 const turf = require('@turf/turf');
-const {createFormPopup,fetchShapes, createLayerFromShape, saveShape} = require('./loadDataMap');
-const {loadFires} = require('./loadFireData');
+const { mapLayers } = require('./mapUtils/mapOverlays');
+const { loadDataMap } = require('./mapUtils/loadDataMap');
+const {loadFires} = require('./mapUtils/loadFireData');
 const imageUrls = require('./imageUrls');
-const { loadFlights } = require('./loadFlightData');
-const { loadADSB, getCurrentADSB } = require('./loadADSB');
+const { loadFlights } = require('./mapUtils/loadFlightData');
+const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
 
 
 const UPDATE_INTERVAL = 10000;
 
-const drawnItems = new L.FeatureGroup();
+//const drawnItems = new L.FeatureGroup();
 
-async function loadShapes() {
-    console.log('Loading shapes...');
-    const shapes = await fetchShapes();
-    console.log('Shapes to load:', shapes);
-    if (shapes && shapes.length > 0) {
-        shapes.forEach((shape, index) => {
-            console.log(`Processing shape ${index}:`, shape);
-            const layer = createLayerFromShape(shape);
-            if (layer) {
-                drawnItems.addLayer(layer);
-                console.log(`Added layer ${index} to map`);
-            } else {
-                console.log(`Failed to create layer for shape ${index}:`, shape);
-            }
-        });
-    } else {
-        console.log('No shapes to load');
-    }
-}
+// async function loadShapes() {
+//     console.log('Loading shapes...');
+//     const shapes = await fetchShapes();
+//     console.log('Shapes to load:', shapes);
+//     if (shapes && shapes.length > 0) {
+//         shapes.forEach((shape, index) => {
+//             console.log(`Processing shape ${index}:`, shape);
+//             const layer = createLayerFromShape(shape);
+//             if (layer) {
+//                 drawnItems.addLayer(layer);
+//                 console.log(`Added layer ${index} to map`);
+//             } else {
+//                 console.log(`Failed to create layer for shape ${index}:`, shape);
+//             }
+//         });
+//     } else {
+//         console.log('No shapes to load');
+//     }
+// }
 
 async function initializeMap() {
     const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
+    const { drawnItems, createFormPopup, saveShape, loadShapes } = await loadDataMap();
     map.addLayer(drawnItems);
+    console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
 
+    //const drawnItems = new L.FeatureGroup();
     const fireLayer = L.layerGroup();
     const flightLayer = L.layerGroup();
     const adsbLayer = L.layerGroup();
     // Base layer definitions
-    const baseLayers = {
-        "OpenStreet": L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }),
-        "CartoDB_DarkMatter" : L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }),
-        "Terrain": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-            minZoom: 0,
-            maxZoom: 22,
-        })
-    };
-    baseLayers["OpenStreet"].addTo(map);
+    let mapBaseLayers = mapLayers();
+    mapBaseLayers['OpenStreet'].addTo(map);
 
     try {
         await loadFires(fireLayer);
@@ -84,12 +73,10 @@ async function initializeMap() {
     } catch (error) {
         console.log('Error loading adsb', error)
     }
-    await loadShapes();
-    console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
-
-    
-
-    
+    //await loadDataMap(drawnItems);
+    //await loadDataMap();
+    //map.addLayer(drawnItems);
+    //console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
 
     // Overlay layers
     const lgtt = L.marker([38.11, 23.78]).bindPopup('lgtt');
@@ -104,7 +91,7 @@ async function initializeMap() {
     
 
     // Add layer control to map
-    L.control.layers(baseLayers, overlayData).addTo(map);
+    L.control.layers(mapBaseLayers, overlayData).addTo(map);
     
     const drawController = new L.Control.Draw({
         edit: {
@@ -285,7 +272,7 @@ async function initializeMap() {
                     }
     
                     if (turf.booleanPointInPolygon(point, shape)) {
-                        sendAlertToTab(`Airplane ${adsbPoint.id} is within a drawn shape!`);
+                        sendAlertToTab(`Airplane ${adsbPoint.id} is within shape with ID ${layer.id}!`);
                     }
                 });
             });

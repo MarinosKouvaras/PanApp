@@ -1,5 +1,5 @@
 const L = require('leaflet');
-const imageUrls = require('./imageUrls');
+const imageUrls = require('../imageUrls');
 require('leaflet-rotatedmarker');
 
 let currentADSB=[];
