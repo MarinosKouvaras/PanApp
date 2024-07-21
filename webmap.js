@@ -9,26 +9,9 @@ const imageUrls = require('./imageUrls');
 const { loadFlights } = require('./loadFlightData');
 
 
-// Map initialization
-const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
-const UPDATE_INTERVAL = 10000; // 10 seconds, adjust as needed
-const BOUNDING_BOX = [37.8, 23.5, 38.1, 24.2]; // Approximate bounding box for Athens area
-
-// Create a layer group to hold our markers
-//const fireLayer = L.layerGroup().addTo(map);
-const fireLayer = L.layerGroup();
-const flightLayer = L.layerGroup();
-
-
-  
-//updateFlights();
-//setInterval(updateFlights, UPDATE_INTERVAL);
-
+const UPDATE_INTERVAL = 10000;
 
 const drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
-
-
 async function loadShapes() {
     console.log('Loading shapes...');
     const shapes = await fetchShapes();
@@ -44,14 +27,17 @@ async function loadShapes() {
                 console.log(`Failed to create layer for shape ${index}:`, shape);
             }
         });
-        // Fit the map to the bounds of all shapes
-        map.fitBounds(drawnItems.getBounds());
     } else {
         console.log('No shapes to load');
     }
 }
 
 async function initializeMap() {
+    const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
+    map.addLayer(drawnItems);
+
+    const fireLayer = L.layerGroup();
+    const flightLayer = L.layerGroup();
     // Base layer definitions
     const baseLayers = {
         "OpenStreet": L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -70,9 +56,6 @@ async function initializeMap() {
         })
     };
     baseLayers["OpenStreet"].addTo(map);
-
-
-
 
     try {
         await loadFires(fireLayer);
@@ -100,14 +83,15 @@ async function initializeMap() {
     const lgtt = L.marker([38.11, 23.78]).bindPopup('lgtt');
     const airports = L.layerGroup([lgtt]);
     
-    let overlayAirports = {
+    let overlayData = {
     "Airports": airports,
     "Fires": fireLayer,
     "Flights": flightLayer
     };
+    
 
     // Add layer control to map
-    L.control.layers(baseLayers, overlayAirports).addTo(map);
+    L.control.layers(baseLayers, overlayData).addTo(map);
     
     const drawController = new L.Control.Draw({
         edit: {
@@ -149,12 +133,7 @@ async function initializeMap() {
 
     map.on('draw:created', function (e) {
         const layer = e.layer;
-        //const shape = layer;
         let shapeData;
-        //alert(layer);
-        // if (e.layerType === 'circle') {
-        //     //shape.properties.radius = layer.getRadius();
-        // }
         if (e.layerType === 'circle') {
             shapeData = {
                 type: 'Circle',
@@ -188,6 +167,8 @@ async function initializeMap() {
             }
         });
     });
+
+    setInterval(() => loadFlights(flightLayer), UPDATE_INTERVAL);
 
     function updateShape(layer) {
         const id = layer.id;

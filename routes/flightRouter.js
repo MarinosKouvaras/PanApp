@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const response = await axios.get('https://api.adsb.lol/v2/sqk/7000');
+    const response = await axios.get('https://api.adsb.lol/v2/mil');
     res.json(response.data);
   } catch (error) {
     console.error('Error fetching flight data:', error);
