@@ -7,6 +7,7 @@ const {createFormPopup,fetchShapes, createLayerFromShape, saveShape} = require('
 const {loadFires} = require('./loadFireData');
 const imageUrls = require('./imageUrls');
 const { loadFlights } = require('./loadFlightData');
+const { loadADSB } = require('./loadADSB');
 
 
 const UPDATE_INTERVAL = 10000;
@@ -38,6 +39,7 @@ async function initializeMap() {
 
     const fireLayer = L.layerGroup();
     const flightLayer = L.layerGroup();
+    const adsbLayer = L.layerGroup();
     // Base layer definitions
     const baseLayers = {
         "OpenStreet": L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -72,6 +74,14 @@ async function initializeMap() {
     } catch (error) {
         console.log('Error loading flights', error);
     }
+
+    try {
+        await loadADSB(adsbLayer);
+        map.addLayer(adsbLayer);
+        console.log('ADSB layer added to map')
+    } catch (error) {
+        console.log('Error loading adsb', error)
+    }
     await loadShapes();
     console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
 
@@ -86,7 +96,8 @@ async function initializeMap() {
     let overlayData = {
     "Airports": airports,
     "Fires": fireLayer,
-    "Flights": flightLayer
+    "Flights": flightLayer,
+    "ADSB": adsbLayer
     };
     
 
@@ -169,6 +180,7 @@ async function initializeMap() {
     });
 
     setInterval(() => loadFlights(flightLayer), UPDATE_INTERVAL);
+    setInterval(() => loadADSB(adsbLayer), UPDATE_INTERVAL);
 
     function updateShape(layer) {
         const id = layer.id;

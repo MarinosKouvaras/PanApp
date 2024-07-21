@@ -10,6 +10,7 @@ const drawingsRouter = require('./routes/drawings');
 const shapeRoutes = require('./routes/shapes');
 const fireRouter = require('./routes/fireRouter');
 const flightRouter = require('./routes/flightRouter');
+const adsbRouter = require('./routes/openSky');
 
 
 const app = express();
@@ -27,6 +28,7 @@ app.use('/drawings', drawingsRouter);
 app.use('/shapes', shapeRoutes);
 app.use('/fires', fireRouter);
 app.use('/flights', flightRouter);
+app.use('/adsb', adsbRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
