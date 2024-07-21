@@ -181,9 +181,28 @@ async function initializeMap() {
         });
     });
 
+    // Open new tab for alerts
+    const alertsTab = window.open('', 'alertsTab', 'width=400,height=600');
+    alertsTab.document.write('<html><head><title>Alerts</title></head><body><h1>Alerts</h1><div id="alerts"></div></body></html>');
+
+    function sendAlertToTab(message) {
+        if (alertsTab && !alertsTab.closed) {
+            console.log('Sending alert to tab:', message); // Debugging
+            alertsTab.document.getElementById('alerts').innerHTML += `<p>${message}</p>`;
+        } else {
+            console.error('Alerts tab is not available or closed');
+        }
+    }
+    
+
+    // Ensure the new tab is fully loaded before using it
+    setTimeout(() => {
+        setInterval(() => checkADSBInShapes(sendAlertToTab), UPDATE_INTERVAL);
+    }, 500);
+
     setInterval(() => loadFlights(flightLayer), UPDATE_INTERVAL);
     setInterval(() => loadADSB(adsbLayer), UPDATE_INTERVAL);
-    setInterval(() => checkADSBInShapes(), UPDATE_INTERVAL);
+
 
     function updateShape(layer) {
         const id = layer.id;
@@ -247,7 +266,7 @@ async function initializeMap() {
         });
     });
 
-    async function checkADSBInShapes() {
+    async function checkADSBInShapes(sendAlert) {
         try {
             const adsbData = await getCurrentADSB();
             const drawnLayers = drawnItems.getLayers();
@@ -266,15 +285,14 @@ async function initializeMap() {
                     }
     
                     if (turf.booleanPointInPolygon(point, shape)) {
-                        alert(`Airplane ${adsbPoint.id} is within a drawn shape!`);
+                        sendAlertToTab(`Airplane ${adsbPoint.id} is within a drawn shape!`);
                     }
                 });
             });
         } catch (error) {
             console.error('Error checking ADSB data within shapes:', error);
         }
-    }
-   
+    }   
 }
 
 
