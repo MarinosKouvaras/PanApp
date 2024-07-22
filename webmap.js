@@ -1,19 +1,20 @@
 // Import the leaflet package
 const L = require('leaflet');
 require('leaflet-draw');
-require('leaflet-draw-drag')
-require('leaflet-realtime')
+require('leaflet-draw-drag');
+require('leaflet-realtime');
+require('leaflet-filelayer')(L);
 const turf = require('@turf/turf');
 const { mapLayers } = require('./mapUtils/mapOverlays');
 const { loadDataMap } = require('./mapUtils/loadDataMap');
-const { mapDrawControllers }= require('./mapUtils/mapDrawControllers');
+const { mapDrawControllers, mapFileImport }= require('./mapUtils/mapDrawControllers');
 const {loadFires} = require('./mapUtils/loadFireData');
 const imageUrls = require('./imageUrls');
 const { loadFlights } = require('./mapUtils/loadFlightData');
 const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
 
 
-const UPDATE_INTERVAL = 10000;
+const UPDATE_INTERVAL = 5000;
 
 async function initializeMap() {
     const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
@@ -22,7 +23,35 @@ async function initializeMap() {
     console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
 
     let drawController = mapDrawControllers(drawnItems);
+    //let fileImporter = mapFileImport();
     map.addControl(drawController);
+    //map.addControl(fileImporter);
+
+    const loadedFileLayers = L.layerGroup().addTo(map);
+
+
+    const fileLayerControl = L.Control.fileLayerLoad({
+        layer: L.geoJson,
+        layerOptions: {style: {color:'red'}},
+        addToMap: false,
+        fileSizeLimit: 1024,
+        formats: [
+            '.geojson',
+            '.kml',
+            '.json',
+            '.kml',
+            '.gpx',
+        ]
+    });
+    fileLayerControl.addTo(map);
+    //var control = L.Control.fileLayerLoad();
+    fileLayerControl.loader.on('data:loaded', function (e) {
+        // Add the loaded layer to our layer group
+        loadedFileLayers.addLayer(e.layer);
+        // Fit the map to the loaded data
+        map.fitBounds(e.layer.getBounds());
+    });
+    
 
     //const drawnItems = new L.FeatureGroup();
     const fireLayer = L.layerGroup();
@@ -64,7 +93,8 @@ async function initializeMap() {
     "Airports": airports,
     "Fires": fireLayer,
     "Flights": flightLayer,
-    "ADSB": adsbLayer
+    "ADSB": adsbLayer,
+    "Loaded Files": loadedFileLayers
     };
     
 
