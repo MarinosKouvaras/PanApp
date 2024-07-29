@@ -17548,134 +17548,146 @@ async function initializeMap() {
     }
     // Add this after initializing the map
     L.easyButton('<img src="./assets/cndr.png" style="width:100%; height:auto;">', function(btn, map) {
-        openCommandDialog();
+        fireFightingCommand();
     }, 'Send firefighting command').addTo(map);
 
-    function openCommandDialog() {
-        const dialog = L.control.dialog({
-            size: [350, 350],
-            minSize: [200, 200],
-            maxSize: [500, 500],
-            anchor: [50, 50],
-            position: 'topleft',
-            initOpen: true
-        }).addTo(map);
+
+    let commandLayer = new L.layerGroup().addTo(map);
+
+    function fireFightingCommand() {
+        function openCommandDialog() {
+            const dialog = L.control.dialog({
+                size: [350, 350],
+                minSize: [200, 200],
+                maxSize: [500, 500],
+                anchor: [50, 50],
+                position: 'topleft',
+                initOpen: true
+            }).addTo(map);
+            
+            dialog.showClose();  // Add the built-in close button
+            dialog.showResize(); // Add the built-in resize handle
         
-        dialog.showClose();  // Add the built-in close button
-        dialog.showResize(); // Add the built-in resize handle
-    
-        let content = `
-            <h3>Send Firefighting Command</h3>
-            <select id="airport-select">
-                <option value="">Select Airport</option>
-            </select>
-            <br><br>
-            <select id="command-select">
-                <option value="">Select Command</option>
-                <option value="patrol">Patrol</option>
-                <option value="commit">Commit</option>
-            </select>
-            <br><br>
-            <select id="fire-select">
-                <option value="">Select Fire</option>
-            </select>
-            <br><br>
-            <button id="send-command">Send Command</button>
-        `;
+            let content = `
+                <h3>Send Firefighting Command</h3>
+                <select id="airport-select">
+                    <option value="">Select Airport</option>
+                </select>
+                <br><br>
+                <select id="command-select">
+                    <option value="">Select Command</option>
+                    <option value="patrol">Patrol</option>
+                    <option value="commit">Commit</option>
+                </select>
+                <br><br>
+                <select id="fire-select">
+                    <option value="">Select Fire</option>
+                </select>
+                <br><br>
+                <button id="send-command">Send Command</button>
+            `;
+            
+            dialog.setContent(content);
+            
+            // Populate airport and fire options
+            populateAirportOptions();
+            populateFireOptions(globalFireData);
+            
+            // Add event listener for the send button
+            document.getElementById('send-command').addEventListener('click', function() {
+                const airport = document.getElementById('airport-select').value;
+                const command = document.getElementById('command-select').value;
+                const fireIndex = document.getElementById('fire-select').value;
         
-        dialog.setContent(content);
+                if (airport && command && fireIndex !== "") {
+                    sendFirefightingCommand(airport, command, parseInt(fireIndex));
+                    dialog.close();
+                } else {
+                    alert('Please select all options');
+                }
+            });
+        }
         
-        // Populate airport and fire options
-        populateAirportOptions();
-        populateFireOptions(globalFireData);
+        function populateAirportOptions() {
+            // Add logic to populate airport options
+            // This will depend on how you store airport data
+            const airportSelect = document.getElementById('airport-select');
+            airportSelect.innerHTML = '<option value="">Select Airport</option>';  // Clear previous options
+            my_airports.forEach(airport => {
+                const option = document.createElement('option');
+                option.value = airport.code;
+                option.textContent = `${airport.name} (${airport.code})`;
+                airportSelect.appendChild(option);
+            });
+        }
         
-        // Add event listener for the send button
-        document.getElementById('send-command').addEventListener('click', function() {
-            const airport = document.getElementById('airport-select').value;
-            const command = document.getElementById('command-select').value;
-            const fireIndex = document.getElementById('fire-select').value;
-    
-            if (airport && command && fireIndex !== "") {
-                sendFirefightingCommand(airport, command, parseInt(fireIndex));
-                dialog.close();
-            } else {
-                alert('Please select all options');
+        function populateFireOptions(fireData) {
+            const fireSelect = document.getElementById('fire-select');
+            
+            // Clear existing options
+            fireSelect.innerHTML = '<option value="">Select Fire</option>';
+        
+            fireData.forEach((fire, index) => {
+                const option = document.createElement('option');
+                option.value = index; // Using index as value, you might want to use a unique identifier if available
+                option.textContent = `Fire at ${fire.latitude}, ${fire.longitude} (${fire.acq_date} ${fire.acq_time})`;
+                fireSelect.appendChild(option);
+            });
+        }
+        function sendFirefightingCommand(airport, command, fireIndex) {
+            const airportCoords = getAirportCoordinates(airport);
+            const fireCoords = getFireCoordinates(fireIndex);
+            
+            if (!airportCoords || !fireCoords) {
+                console.error('Invalid airport or fire data');
+                return;
             }
-        });
-    }
-    
-    function populateAirportOptions() {
-        // Add logic to populate airport options
-        // This will depend on how you store airport data
-        const airportSelect = document.getElementById('airport-select');
-    
-        my_airports.forEach(airport => {
-            const option = document.createElement('option');
-            option.value = airport.code;
-            option.textContent = `${airport.name} (${airport.code})`;
-            airportSelect.appendChild(option);
-        });
-    }
-    
-    function populateFireOptions(fireData) {
-        const fireSelect = document.getElementById('fire-select');
         
-        // Clear existing options
-        fireSelect.innerHTML = '<option value="">Select Fire</option>';
-    
-        fireData.forEach((fire, index) => {
-            const option = document.createElement('option');
-            option.value = index; // Using index as value, you might want to use a unique identifier if available
-            option.textContent = `Fire at ${fire.latitude}, ${fire.longitude} (${fire.acq_date} ${fire.acq_time})`;
-            fireSelect.appendChild(option);
-        });
-    }
-    function sendFirefightingCommand(airport, command, fireIndex) {
-        const airportCoords = getAirportCoordinates(airport);
-        const fireCoords = getFireCoordinates(fireIndex);
-        
-        if (!airportCoords || !fireCoords) {
-            console.error('Invalid airport or fire data');
-            return;
+            // Draw line on the map
+            const line = L.polyline([airportCoords, fireCoords], {color: 'red', weight: 3}).addTo(map);
+            commandLayer.addLayer(line);
+            
+            // Create message
+            const airportName = my_airports.find(a => a.code === airport).name;
+            const fire = globalFireData[fireIndex];
+            const message = `Firefighting aircraft from ${airportName} (${airport}) has been commanded to ${command} the fire at ${fire.latitude}, ${fire.longitude}`;
+            
+            // Display message in the alerts tab
+            sendAlertToTab(message);
+            
+            // Display a popup on the map
+            L.popup()
+                .setLatLng([(airportCoords[0] + fireCoords[0]) / 2, (airportCoords[1] + fireCoords[1]) / 2])
+                .setContent(message)
+                .openOn(map);
         }
-    
-        // Draw line on the map
-        const line = L.polyline([airportCoords, fireCoords], {color: 'red', weight: 3}).addTo(map);
         
-        // Create message
-        const airportName = my_airports.find(a => a.code === airport).name;
-        const fire = globalFireData[fireIndex];
-        const message = `Firefighting aircraft from ${airportName} (${airport}) has been commanded to ${command} the fire at ${fire.latitude}, ${fire.longitude}`;
-        
-        // Display message in the alerts tab
-        sendAlertToTab(message);
-        
-        // Display a popup on the map
-        L.popup()
-            .setLatLng([(airportCoords[0] + fireCoords[0]) / 2, (airportCoords[1] + fireCoords[1]) / 2])
-            .setContent(message)
-            .openOn(map);
-    }
-    
-    function getAirportCoordinates(airportCode) {
-        const airport = my_airports.find(a => a.code === airportCode);
-        if (airport) {
-            return [airport.lat, airport.lon];
-        } else {
-            console.error(`Airport with code ${airportCode} not found`);
-            return null;
+        function getAirportCoordinates(airportCode) {
+            const airport = my_airports.find(a => a.code === airportCode);
+            if (airport) {
+                return [airport.lat, airport.lon];
+            } else {
+                console.error(`Airport with code ${airportCode} not found`);
+                return null;
+            }
         }
-    }
-    
-    function getFireCoordinates(fireIndex) {
-        const fire = globalFireData[fireIndex];
-        if (fire) {
-            return [parseFloat(fire.latitude), parseFloat(fire.longitude)];
-        } else {
-            console.error(`Fire with index ${fireIndex} not found`);
-            return null;
+
+        function getFireCoordinates(fireIndex) {
+            const fire = globalFireData[fireIndex];
+            if (fire) {
+                return [parseFloat(fire.latitude), parseFloat(fire.longitude)];
+            } else {
+                console.error(`Fire with index ${fireIndex} not found`);
+                return null;
+            }
         }
-    }
+
+        openCommandDialog();
+    };
+
+    
+    
+    
     ///////////////////////
     
     const loadedFileLayers = L.layerGroup().addTo(map);
