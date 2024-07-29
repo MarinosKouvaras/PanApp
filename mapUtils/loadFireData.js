@@ -55,7 +55,8 @@ function loadFires(existingLayer) {
 
                 console.log('Total markers added:', fireLayer.getLayers().length);
 
-                resolve(fireLayer);
+                //resolve(fireLayer);
+                resolve({layer: fireLayer, data: fireData})
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
