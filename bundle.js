@@ -17523,6 +17523,35 @@ const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
 const UPDATE_INTERVAL = 5000;
 let globalFireData = [];
 
+window.acknowledgeCommand = function(lineId) {
+    // Find the line by its Leaflet ID
+    const line = commandLayer.getLayers().find(layer => layer._leaflet_id === parseInt(lineId));
+    
+    if (line) {
+        // Change the line color to green
+        line.setStyle({color: 'green'});
+        
+        // Get the IP address of the client
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                const ipAddress = data.ip;
+                
+                // Send acknowledgment to server
+                sendAcknowledgmentToServer(lineId, ipAddress);
+                
+                // Update the popup content
+                const newPopupContent = `Command acknowledged by IP: ${ipAddress}`;
+                line.bindPopup(newPopupContent).openPopup();
+            })
+            .catch(error => {
+                console.error('Error getting IP address:', error);
+            });
+    } else {
+        console.error('Line not found');
+    }
+}
+
 async function initializeMap() {
     const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
     const { drawnItems, createFormPopup, saveShape, loadShapes } = await loadDataMap();
@@ -17540,7 +17569,7 @@ async function initializeMap() {
     ];
     try {
         const {layer: fireLayer, data: fireData} = await loadFires();
-        map.addLayer(fireLayer);
+        //map.addLayer(fireLayer);
         globalFireData = fireData; // Store the fire data globally
         console.log('Fire layer added to map');
     } catch (error) {
@@ -17552,9 +17581,14 @@ async function initializeMap() {
     }, 'Send firefighting command').addTo(map);
 
 
+    
+    
     let commandLayer = new L.layerGroup().addTo(map);
 
     function fireFightingCommand() {
+        if (window.currentDialog) {
+            map.removeControl(window.currentDialog);
+          }
         function openCommandDialog() {
             const dialog = L.control.dialog({
                 size: [350, 350],
@@ -17564,6 +17598,8 @@ async function initializeMap() {
                 position: 'topleft',
                 initOpen: true
             }).addTo(map);
+
+            window.currentDialog = dialog;
             
             dialog.showClose();  // Add the built-in close button
             dialog.showResize(); // Add the built-in resize handle
@@ -17607,6 +17643,7 @@ async function initializeMap() {
                 }
             });
         }
+        
         
         function populateAirportOptions() {
             // Add logic to populate airport options
@@ -17654,11 +17691,16 @@ async function initializeMap() {
             
             // Display message in the alerts tab
             sendAlertToTab(message);
+
+            const popupContent = `
+                ${message}<br><br>
+                <button onclick="acknowledgeCommand('${line._leaflet_id}')">Acknowledge</button>
+                `;
             
             // Display a popup on the map
             L.popup()
                 .setLatLng([(airportCoords[0] + fireCoords[0]) / 2, (airportCoords[1] + fireCoords[1]) / 2])
-                .setContent(message)
+                .setContent(popupContent)
                 .openOn(map);
         }
         
@@ -17682,8 +17724,34 @@ async function initializeMap() {
             }
         }
 
+        
+
+
+
         openCommandDialog();
     };
+    
+
+    function sendAcknowledgmentToServer(lineId, ipAddress) {
+        // Replace with your actual server endpoint
+        fetch('/acknowledge-command', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                lineId: lineId,
+                ipAddress: ipAddress,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Acknowledgment sent to server:', data);
+        })
+        .catch(error => {
+            console.error('Error sending acknowledgment to server:', error);
+        });
+    }
 
     
     
@@ -17796,6 +17864,10 @@ async function initializeMap() {
                 layer.bindPopup(`Name: ${name}<br>Description: ${description}`);
                 //layer.bindPopup(`Name: ${name}<br>Description: ${description}`);
                 //layer.setPopupContent(`Name: ${name}<br>Description: ${description}`);
+                // Refresh the page after saving
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } catch (error) {
                 console.error('Error saving drawing:', error);
                 layer.setPopupContent('Error saving drawing. Please try again.');
@@ -17886,6 +17958,7 @@ async function initializeMap() {
         layers.eachLayer(function (layer) {
             deleteShape(layer);
         });
+        commandLayer.clearLayers();
     });
 
     async function checkADSBInShapes(sendAlert) {
@@ -17914,7 +17987,8 @@ async function initializeMap() {
         } catch (error) {
             console.error('Error checking ADSB data within shapes:', error);
         }
-    }      
+    } 
+         
 }
 
 

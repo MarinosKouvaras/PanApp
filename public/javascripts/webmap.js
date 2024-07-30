@@ -17523,6 +17523,8 @@ const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
 const UPDATE_INTERVAL = 5000;
 let globalFireData = [];
 
+
+
 async function initializeMap() {
     const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
     const { drawnItems, createFormPopup, saveShape, loadShapes } = await loadDataMap();
@@ -17533,6 +17535,35 @@ async function initializeMap() {
     map.addControl(drawController);
     //map.addControl(fileImporter);
     ///////////////////
+    window.acknowledgeCommand = function(lineId) {
+        // Find the line by its Leaflet ID
+        const line = commandLayer.getLayers().find(layer => layer._leaflet_id === parseInt(lineId));
+        
+        if (line) {
+            // Change the line color to green
+            line.setStyle({color: 'green'});
+            
+            // Get the IP address of the client
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    const ipAddress = data.ip;
+                    
+                    // Send acknowledgment to server
+                    sendAcknowledgmentToServer(lineId, ipAddress);
+                    
+                    // Update the popup content
+                    const newPopupContent = `Command acknowledged by IP: ${ipAddress}`;
+                    line.bindPopup(newPopupContent).openPopup();
+                })
+                .catch(error => {
+                    console.error('Error getting IP address:', error);
+                });
+        } else {
+            console.error('Line not found');
+        }
+    }
+
     const my_airports = [
         { code: 'LGTT', name: 'Athens International Airport', lat: 37.9364, lon: 23.9445 },
         { code: 'LGAV', name: 'Eleftherios Venizelos International Airport', lat: 37.9364, lon: 23.9445 },
@@ -17555,6 +17586,7 @@ async function initializeMap() {
     
     
     let commandLayer = new L.layerGroup().addTo(map);
+
     function fireFightingCommand() {
         if (window.currentDialog) {
             map.removeControl(window.currentDialog);
@@ -17614,6 +17646,7 @@ async function initializeMap() {
             });
         }
         
+        
         function populateAirportOptions() {
             // Add logic to populate airport options
             // This will depend on how you store airport data
@@ -17660,11 +17693,16 @@ async function initializeMap() {
             
             // Display message in the alerts tab
             sendAlertToTab(message);
+
+            const popupContent = `
+                ${message}<br><br>
+                <button onclick="acknowledgeCommand('${line._leaflet_id}')">Acknowledge</button>
+                `;
             
             // Display a popup on the map
             L.popup()
                 .setLatLng([(airportCoords[0] + fireCoords[0]) / 2, (airportCoords[1] + fireCoords[1]) / 2])
-                .setContent(message)
+                .setContent(popupContent)
                 .openOn(map);
         }
         
@@ -17688,8 +17726,34 @@ async function initializeMap() {
             }
         }
 
+        
+
+
+
         openCommandDialog();
     };
+    
+
+    function sendAcknowledgmentToServer(lineId, ipAddress) {
+        // Replace with your actual server endpoint
+        fetch('/acknowledge-command', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                lineId: lineId,
+                ipAddress: ipAddress,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Acknowledgment sent to server:', data);
+        })
+        .catch(error => {
+            console.error('Error sending acknowledgment to server:', error);
+        });
+    }
 
     
     
@@ -17925,7 +17989,8 @@ async function initializeMap() {
         } catch (error) {
             console.error('Error checking ADSB data within shapes:', error);
         }
-    }      
+    } 
+         
 }
 
 
