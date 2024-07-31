@@ -7,6 +7,9 @@ require('leaflet-easybutton');
 require('leaflet-dialog');
 require('leaflet-filelayer')(L);
 require('leaflet-notifications');
+const { notifications } = require('./mapUtils/notifications');
+const { airportsData } = require('./data/airports');
+const { fireFightingFeature } = require('./mapUtils/fireFightingCommands');
 const turf = require('@turf/turf');
 const { mapLayers } = require('./mapUtils/mapOverlays');
 const { loadDataMap } = require('./mapUtils/loadDataMap');
@@ -18,25 +21,21 @@ const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
 
 
 const UPDATE_INTERVAL = 5000;
-let globalFireData = [];
 
 
 async function initializeMap() {
     const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
-    const { drawnItems, createFormPopup, saveShape, loadShapes } = await loadDataMap();
+    const { drawnItems, createFormPopup, saveShape } = await loadDataMap();
     map.addLayer(drawnItems);
     console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
     let drawController = mapDrawControllers(drawnItems);
     map.addControl(drawController);
+    L.easyButton('<img src="./assets/cndr.png" style="width:100%; height:auto;">', async function(btn, map) {
+        await fireFightingCommand();
+    }, 'Send firefighting command').addTo(map);
     ///////////////////
-    let notificationControl = L.control
-        .notifications({
-            position: 'bottomright',
-            closable: true,
-            dismissable: true,
-            timeout: 300000,
-            })
-        .addTo(map);
+    const notificationControl = notifications();
+    notificationControl.addTo(map);
 
     window.acknowledgeCommand = function(lineId) {
         // Find the line by its Leaflet ID
@@ -57,15 +56,6 @@ async function initializeMap() {
                     // Remove the warning notification
                     notificationControl.success(lineId);
 
-                // Display a success notification
-                    // notificationControl.alert('Command acknowledged successfully', {
-                    //     icon: 'check',
-                    //     type: 'success',
-                    //     closeButton: true,
-                    //     autoClose: false,
-                    //     id: `success-${lineId}` // Auto close after 5 seconds
-                    // });
-                    // Update the popup content
                     const newPopupContent = `Command acknowledged by IP: ${ipAddress}`;
                     line.setPopupContent(newPopupContent);
                     line.openPopup();
@@ -79,34 +69,16 @@ async function initializeMap() {
         }
     }
 
-    const my_airports = [
-        { code: 'LGTT', name: 'Athens International Airport', lat: 37.9364, lon: 23.9445 },
-        { code: 'LGAV', name: 'Eleftherios Venizelos International Airport', lat: 37.9364, lon: 23.9445 },
-        // Add more airports as needed
-    ];
-    try {
-        const {layer: fireLayer, data: fireData} = await loadFires();
-        //map.addLayer(fireLayer);
-        globalFireData = fireData; // Store the fire data globally
-        console.log('Fire layer added to map');
-    } catch (error) {
-        console.error('Error loading fires:', error);
-    }
-    // Add this after initializing the map
-    L.easyButton('<img src="./assets/cndr.png" style="width:100%; height:auto;">', function(btn, map) {
-        fireFightingCommand();
-    }, 'Send firefighting command').addTo(map);
-
-
-    
+    const my_airports = airportsData()    
     
     let commandLayer = new L.layerGroup().addTo(map);
 
     function fireFightingCommand() {
+        let firefightingFeatureInstance;
         if (window.currentDialog) {
             map.removeControl(window.currentDialog);
           }
-        function openCommandDialog() {
+        async function openCommandDialog() {
             const dialog = L.control.dialog({
                 size: [350, 350],
                 minSize: [200, 200],
@@ -144,7 +116,10 @@ async function initializeMap() {
             
             // Populate airport and fire options
             populateAirportOptions();
-            populateFireOptions(globalFireData);
+
+            firefightingFeatureInstance = await fireFightingFeature();
+            populateFireOptions(firefightingFeatureInstance.globalFireData);
+
             
             // Add event listener for the send button
             document.getElementById('send-command').addEventListener('click', function() {
@@ -174,13 +149,11 @@ async function initializeMap() {
                 airportSelect.appendChild(option);
             });
         }
-        
+    
         function populateFireOptions(fireData) {
-            const fireSelect = document.getElementById('fire-select');
-            
+            const fireSelect = document.getElementById('fire-select');            
             // Clear existing options
-            fireSelect.innerHTML = '<option value="">Select Fire</option>';
-        
+            fireSelect.innerHTML = '<option value="">Select Fire</option>';        
             fireData.forEach((fire, index) => {
                 const option = document.createElement('option');
                 option.value = index; // Using index as value, you might want to use a unique identifier if available
@@ -190,7 +163,8 @@ async function initializeMap() {
         }
         function sendFirefightingCommand(airport, command, fireIndex) {
             const airportCoords = getAirportCoordinates(airport);
-            const fireCoords = getFireCoordinates(fireIndex);
+
+            const fireCoords = firefightingFeatureInstance.getFireCoordinates(fireIndex);
             
             if (!airportCoords || !fireCoords) {
                 console.error('Invalid airport or fire data');
@@ -203,7 +177,7 @@ async function initializeMap() {
             
             // Create message
             const airportName = my_airports.find(a => a.code === airport).name;
-            const fire = globalFireData[fireIndex];
+            const fire = firefightingFeatureInstance.globalFireData[fireIndex];
             const message = `Firefighting aircraft from ${airportName} (${airport}) has been commanded to ${command} the fire at ${fire.latitude}, ${fire.longitude}`;
             
             // Display message in the alerts tab
@@ -239,15 +213,6 @@ async function initializeMap() {
             }
         }
 
-        function getFireCoordinates(fireIndex) {
-            const fire = globalFireData[fireIndex];
-            if (fire) {
-                return [parseFloat(fire.latitude), parseFloat(fire.longitude)];
-            } else {
-                console.error(`Fire with index ${fireIndex} not found`);
-                return null;
-            }
-        }
         openCommandDialog();
     };
     
