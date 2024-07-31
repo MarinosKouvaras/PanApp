@@ -4,10 +4,11 @@ const router = express.Router();
 
 router.get('/', async (req,res) => {
     try {
-        const response = await  axios.get('https://opensky-network.org/api/states/all?lamin=36.146747&lomin=19.841309&lamax=41.162114&lomax=26.564941',{
+        const response = await axios.get('https://opensky-network.org/api/states/all?lamin=36.146747&lomin=19.841309&lamax=41.162114&lomax=26.564941',{
             auth: {
                 username: 'ap23011',
-                password: '1qaz+!@1qaz'
+                //password: '1qaz+!@1qaz'
+                password: 'vfr8+vfr8'
             }
         })
         res.json(response.data);

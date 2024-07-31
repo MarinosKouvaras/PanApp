@@ -4,7 +4,7 @@ require('leaflet-rotatedmarker');
 
 let currentADSB=[];
 
-function loadADSB(existingLayer) {
+async function loadADSB(existingLayer) {
     const adsbLayer = existingLayer || new L.layerGroup();
 
     return new Promise((resolve, reject) => {

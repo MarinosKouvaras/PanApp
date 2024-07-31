@@ -34,6 +34,7 @@
     "leaflet-draw-drag": "^0.4.8",
     "leaflet-easybutton": "^2.4.0",
     "leaflet-filelayer": "^1.2.0",
+    "leaflet-notifications": "^1.0.7",
     "leaflet-realtime": "^2.2.0",
     "leaflet-rotatedmarker": "^0.2.0",
     "morgan": "~1.9.1",
