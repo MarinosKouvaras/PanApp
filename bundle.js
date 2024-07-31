@@ -300,10 +300,23 @@ function loadFires(existingLayer) {
                         const fireMarker = L.marker([latitude, longitude], {icon: fireIcon})
                             .bindPopup(`<b>Fire Location:</b><br>Latitude: ${latitude}<br>Longitude: ${longitude}<br>Date: ${fire.acq_date}<br>Time: ${fire.acq_time}`);
                         fireLayer.addLayer(fireMarker);
+                        
+
                     } else {
                         console.log('Invalid latitude or longitude');
                     }
                 });
+
+                const mockFire = {
+                    latitude: '38.576353',
+                    longitude: '22.149467',
+                    acq_date: '2024-07-31',
+                    acq_time: '14:30',
+                    confidence: 'high',
+                    brightness: '350.5',
+                    frp: '75.2'
+                };
+                fireData.push(mockFire);
 
                 console.log('Total markers added:', fireLayer.getLayers().length);
 
@@ -17636,13 +17649,11 @@ require('leaflet-easybutton');
 require('leaflet-dialog');
 require('leaflet-filelayer')(L);
 require('leaflet-notifications');
-
 const turf = require('@turf/turf');
 const { mapLayers } = require('./mapUtils/mapOverlays');
 const { loadDataMap } = require('./mapUtils/loadDataMap');
 const { mapDrawControllers, mapFileImport }= require('./mapUtils/mapDrawControllers');
 const {loadFires} = require('./mapUtils/loadFireData');
-
 const imageUrls = require('./imageUrls');
 const { loadFlights } = require('./mapUtils/loadFlightData');
 const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
@@ -17651,8 +17662,6 @@ const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
 const UPDATE_INTERVAL = 5000;
 let globalFireData = [];
 
-let notificationControl;
-
 
 async function initializeMap() {
     const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
@@ -17660,11 +17669,16 @@ async function initializeMap() {
     map.addLayer(drawnItems);
     console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
     let drawController = mapDrawControllers(drawnItems);
-    //let fileImporter = mapFileImport();
     map.addControl(drawController);
-    //map.addControl(fileImporter);
     ///////////////////
-    let notificationControl = L.control.notifications({position: 'topright'}).addTo(map);
+    let notificationControl = L.control
+        .notifications({
+            position: 'bottomright',
+            closable: true,
+            dismissable: true,
+            timeout: 300000,
+            })
+        .addTo(map);
 
     window.acknowledgeCommand = function(lineId) {
         // Find the line by its Leaflet ID
@@ -17683,19 +17697,21 @@ async function initializeMap() {
                     // Send acknowledgment to server
                     sendAcknowledgmentToServer(lineId, ipAddress);
                     // Remove the warning notification
-                    notificationControl.removeAlert(lineId);
+                    notificationControl.success(lineId);
 
                 // Display a success notification
-                    notificationControl.addAlert('Command acknowledged successfully', {
-                        icon: 'check',
-                        type: 'success',
-                        closeButton: true,
-                        autoClose: true,
-                        duration: 5000  // Auto close after 5 seconds
-                    });
+                    // notificationControl.alert('Command acknowledged successfully', {
+                    //     icon: 'check',
+                    //     type: 'success',
+                    //     closeButton: true,
+                    //     autoClose: false,
+                    //     id: `success-${lineId}` // Auto close after 5 seconds
+                    // });
                     // Update the popup content
                     const newPopupContent = `Command acknowledged by IP: ${ipAddress}`;
-                    line.bindPopup(newPopupContent).openPopup();
+                    line.setPopupContent(newPopupContent);
+                    line.openPopup();
+                    //line.bindPopup(newPopupContent).openPopup();
                 })
                 .catch(error => {
                     console.error('Error getting IP address:', error);
@@ -17835,18 +17851,19 @@ async function initializeMap() {
             // Display message in the alerts tab
             sendAlertToTab(message);
             // Display notification alert
-            notificationControl.addAlert(message, {
-                icon: 'exclamation-triangle',
-                type: 'warning',
-                closeButton: false,
-                id: line._leaflet_id  // Use the line's ID to identify this alert
+            notificationControl.alert(message, {
+                closable: true,
+                dismissable: true,
+                icon: 'fa fa-exclamation-triangle',
+                timeout: 3000000,
+                id: line._leaflet_id,  // Use the line's ID to identify this
             });
 
             const popupContent = `
                 ${message}<br><br>
                 <button onclick="acknowledgeCommand('${line._leaflet_id}')">Acknowledge</button>
                 `;
-            
+            line.bindPopup(popupContent);
             // Display a popup on the map
             L.popup()
                 .setLatLng([(airportCoords[0] + fireCoords[0]) / 2, (airportCoords[1] + fireCoords[1]) / 2])
@@ -17873,11 +17890,6 @@ async function initializeMap() {
                 return null;
             }
         }
-
-        
-
-
-
         openCommandDialog();
     };
     
@@ -17901,10 +17913,7 @@ async function initializeMap() {
         .catch(error => {
             console.error('Error sending acknowledgment to server:', error);
         });
-    }
-
-    
-    
+    }  
     
     ///////////////////////
     

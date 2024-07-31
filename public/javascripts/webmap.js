@@ -300,10 +300,23 @@ function loadFires(existingLayer) {
                         const fireMarker = L.marker([latitude, longitude], {icon: fireIcon})
                             .bindPopup(`<b>Fire Location:</b><br>Latitude: ${latitude}<br>Longitude: ${longitude}<br>Date: ${fire.acq_date}<br>Time: ${fire.acq_time}`);
                         fireLayer.addLayer(fireMarker);
+                        
+
                     } else {
                         console.log('Invalid latitude or longitude');
                     }
                 });
+
+                const mockFire = {
+                    latitude: '38.576353',
+                    longitude: '22.149467',
+                    acq_date: '2024-07-31',
+                    acq_time: '14:30',
+                    confidence: 'high',
+                    brightness: '350.5',
+                    frp: '75.2'
+                };
+                fireData.push(mockFire);
 
                 console.log('Total markers added:', fireLayer.getLayers().length);
 
