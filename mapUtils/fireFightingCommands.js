@@ -145,6 +145,16 @@ function fireFightingCommand(map, notificationControl, sendAlertToTab, my_airpor
             .setLatLng([(airportCoords[0] + fireCoords[0]) / 2, (airportCoords[1] + fireCoords[1]) / 2])
             .setContent(popupContent)
             .openOn(map);
+        
+        const commandData = {
+            airport,
+            command,
+            fireIndex,
+            airportCoords,
+            fireCoords,
+            message
+        };
+        saveCommandToStorage(commandData);
     }
 
     function getAirportCoordinates(airportCode) {
@@ -161,6 +171,7 @@ function fireFightingCommand(map, notificationControl, sendAlertToTab, my_airpor
         openCommandDialog,
         commandLayer
     };
+    
 }
 
 function sendAcknowledgmentToServer(lineId, ipAddress) {
@@ -182,10 +193,23 @@ function sendAcknowledgmentToServer(lineId, ipAddress) {
         .catch(error => {
             console.error('Error sending acknowledgment to server:', error);
         });
+
+        
+}
+
+function saveCommandToStorage(command) {
+    let commands = JSON.parse(localStorage.getItem('firefightingCommands') || '[]');
+    commands.push(command);
+    localStorage.setItem('firefightingCommands', JSON.stringify(commands));
+}
+
+function loadCommandsFromStorage() {
+    return JSON.parse(localStorage.getItem('firefightingCommands') || '[]');
 }
 
 module.exports = {
     fireFightingFeature,
     fireFightingCommand,
-    sendAcknowledgmentToServer
+    sendAcknowledgmentToServer,
+    loadCommandsFromStorage
 };

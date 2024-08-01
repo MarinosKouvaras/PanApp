@@ -209,6 +209,16 @@ function fireFightingCommand(map, notificationControl, sendAlertToTab, my_airpor
             .setLatLng([(airportCoords[0] + fireCoords[0]) / 2, (airportCoords[1] + fireCoords[1]) / 2])
             .setContent(popupContent)
             .openOn(map);
+        
+        const commandData = {
+            airport,
+            command,
+            fireIndex,
+            airportCoords,
+            fireCoords,
+            message
+        };
+        saveCommandToStorage(commandData);
     }
 
     function getAirportCoordinates(airportCode) {
@@ -225,6 +235,7 @@ function fireFightingCommand(map, notificationControl, sendAlertToTab, my_airpor
         openCommandDialog,
         commandLayer
     };
+    
 }
 
 function sendAcknowledgmentToServer(lineId, ipAddress) {
@@ -246,12 +257,25 @@ function sendAcknowledgmentToServer(lineId, ipAddress) {
         .catch(error => {
             console.error('Error sending acknowledgment to server:', error);
         });
+
+        
+}
+
+function saveCommandToStorage(command) {
+    let commands = JSON.parse(localStorage.getItem('firefightingCommands') || '[]');
+    commands.push(command);
+    localStorage.setItem('firefightingCommands', JSON.stringify(commands));
+}
+
+function loadCommandsFromStorage() {
+    return JSON.parse(localStorage.getItem('firefightingCommands') || '[]');
 }
 
 module.exports = {
     fireFightingFeature,
     fireFightingCommand,
-    sendAcknowledgmentToServer
+    sendAcknowledgmentToServer,
+    loadCommandsFromStorage
 };
 
 },{"./loadFireData":7}],5:[function(require,module,exports){
@@ -17936,7 +17960,7 @@ require('leaflet-filelayer')(L);
 require('leaflet-notifications');
 const { notifications } = require('./mapUtils/notifications');
 const { airportsData, airports } = require('./data/airports');
-const { fireFightingFeature, fireFightingCommand, sendAcknowledgmentToServer } = require('./mapUtils/fireFightingCommands');
+const { fireFightingFeature, fireFightingCommand, sendAcknowledgmentToServer, loadCommandsFromStorage } = require('./mapUtils/fireFightingCommands');
 const { timeStampPrint } = require('./mapUtils/timeStamp');
 const { fileUploader, loadedFileLayers } = require('./mapUtils/fileUploader');
 const turf = require('@turf/turf');
@@ -17965,6 +17989,12 @@ async function initializeMap() {
     notificationControl.addTo(map);
     const { openCommandDialog, commandLayer } = fireFightingCommand(map, notificationControl, sendAlertToTab, my_airports);
     map.addLayer(commandLayer);
+    const savedCommands = loadCommandsFromStorage();
+    savedCommands.forEach(cmd => {
+        const line = L.polyline([cmd.airportCoords, cmd.fireCoords], {color: 'yellow', weight: 3}).addTo(map);
+        commandLayer.addLayer(line);
+        line.bindPopup(cmd.message);
+    });
     L.easyButton('<img src="./assets/cndr.png" style="width:100%; height:auto;">', async function(btn, map) {
         await openCommandDialog();
     }, 'Send firefighting command').addTo(map);

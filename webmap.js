@@ -9,7 +9,7 @@ require('leaflet-filelayer')(L);
 require('leaflet-notifications');
 const { notifications } = require('./mapUtils/notifications');
 const { airportsData, airports } = require('./data/airports');
-const { fireFightingFeature, fireFightingCommand, sendAcknowledgmentToServer } = require('./mapUtils/fireFightingCommands');
+const { fireFightingFeature, fireFightingCommand, sendAcknowledgmentToServer, loadCommandsFromStorage } = require('./mapUtils/fireFightingCommands');
 const { timeStampPrint } = require('./mapUtils/timeStamp');
 const { fileUploader, loadedFileLayers } = require('./mapUtils/fileUploader');
 const turf = require('@turf/turf');
@@ -38,6 +38,12 @@ async function initializeMap() {
     notificationControl.addTo(map);
     const { openCommandDialog, commandLayer } = fireFightingCommand(map, notificationControl, sendAlertToTab, my_airports);
     map.addLayer(commandLayer);
+    const savedCommands = loadCommandsFromStorage();
+    savedCommands.forEach(cmd => {
+        const line = L.polyline([cmd.airportCoords, cmd.fireCoords], {color: 'yellow', weight: 3}).addTo(map);
+        commandLayer.addLayer(line);
+        line.bindPopup(cmd.message);
+    });
     L.easyButton('<img src="./assets/cndr.png" style="width:100%; height:auto;">', async function(btn, map) {
         await openCommandDialog();
     }, 'Send firefighting command').addTo(map);
