@@ -8,7 +8,7 @@ async function loadADSB(existingLayer) {
     const adsbLayer = existingLayer || new L.layerGroup();
 
     return new Promise((resolve, reject) => {
-        const url = '/adsb';
+        const url = 'http://localhost:3000/adsb';
 
         const airplaneIcon = L.icon({
             iconUrl: imageUrls.airplaneIcon,

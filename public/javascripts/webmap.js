@@ -289,7 +289,7 @@ async function loadADSB(existingLayer) {
     const adsbLayer = existingLayer || new L.layerGroup();
 
     return new Promise((resolve, reject) => {
-        const url = '/adsb';
+        const url = 'http://localhost:3000/adsb';
 
         const airplaneIcon = L.icon({
             iconUrl: imageUrls.airplaneIcon,
@@ -537,7 +537,7 @@ function loadFires(existingLayer) {
     });
 
     return new Promise((resolve, reject) => {
-        const url = '/fires';
+        const url = 'http://localhost:3000/fires';
 
         fetch(url)
             .then(response => response.text())
@@ -613,7 +613,7 @@ function loadFlights(existingLayer) {
     const flightLayer = existingLayer || new L.layerGroup();
     
     return new Promise((resolve, reject) => {
-        const url = '/flights'; // This now matches your server route
+        const url = 'http://localhost:3000/flights'; // This now matches your server route
         fetch(url)
             .then(response => {
             if (!response.ok) {

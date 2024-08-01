@@ -5,7 +5,7 @@ function loadFlights(existingLayer) {
     const flightLayer = existingLayer || new L.layerGroup();
     
     return new Promise((resolve, reject) => {
-        const url = '/flights'; // This now matches your server route
+        const url = 'http://localhost:3000/flights'; // This now matches your server route
         fetch(url)
             .then(response => {
             if (!response.ok) {
