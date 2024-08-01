@@ -1,9 +1,9 @@
 
 function airportsData() {
     const airports = [
-        { code: 'LGTT', name: 'Athens International Airport', lat: 37.9364, lon: 23.9445 },
+        { code: 'LGTT', name: 'Tatoi Airport', lat: 38.1089, lon: 23.7838 },
         { code: 'LGAV', name: 'Eleftherios Venizelos International Airport', lat: 37.9364, lon: 23.9445 },
-        // Add more airports as needed
+
     ];
     return airports
 }

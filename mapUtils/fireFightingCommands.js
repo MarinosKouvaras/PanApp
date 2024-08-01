@@ -136,13 +136,7 @@ function fireFightingCommand(map, notificationControl, sendAlertToTab, my_airpor
             // Display message in the alerts tab
             sendAlertToTab(message);
             // Display notification alert
-            notificationControl.alert(message, {
-                closable: true,
-                dismissable: true,
-                icon: 'fa fa-exclamation-triangle',
-                timeout: 3000000,
-                id: line._leaflet_id,  // Use the line's ID to identify this
-            });
+            notificationControl.alert(message);
 
             const popupContent = `
                 ${message}<br><br>
