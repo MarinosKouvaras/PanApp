@@ -8,9 +8,10 @@ require('leaflet-dialog');
 require('leaflet-filelayer')(L);
 require('leaflet-notifications');
 const { notifications } = require('./mapUtils/notifications');
-const { airportsData } = require('./data/airports');
+const { airportsData, airports } = require('./data/airports');
 const { fireFightingFeature, fireFightingCommand, sendAcknowledgmentToServer } = require('./mapUtils/fireFightingCommands');
-const { timeStampPrint } = require('./mapUtils/timeStamp')
+const { timeStampPrint } = require('./mapUtils/timeStamp');
+const { fileUploader, loadedFileLayers } = require('./mapUtils/fileUploader');
 const turf = require('@turf/turf');
 const { mapLayers } = require('./mapUtils/mapOverlays');
 const { loadDataMap } = require('./mapUtils/loadDataMap');
@@ -40,6 +41,66 @@ async function initializeMap() {
     L.easyButton('<img src="./assets/cndr.png" style="width:100%; height:auto;">', async function(btn, map) {
         await openCommandDialog();
     }, 'Send firefighting command').addTo(map);
+
+    // Open new tab for alerts
+    const alertsTab = window.open('', 'alertsTab', 'width=400,height=600');
+    alertsTab.document.write('<html><head><title>Alerts</title></head><body><h1>Alerts</h1><div id="alerts"></div></body></html>');
+
+    // Base layer definitions
+    let mapBaseLayers = mapLayers();
+    mapBaseLayers['OpenStreet'].addTo(map);
+    const fireLayer = L.layerGroup();
+    const flightLayer = L.layerGroup();
+    const adsbLayer = L.layerGroup();
+    fileUploader(map);
+
+    try {
+        await loadFires(fireLayer);
+        map.addLayer(fireLayer);
+        console.log('Fire layer added to map');
+    } catch (error) {
+        console.error('Error loading fires:', error);
+    }
+
+    try {
+        await loadFlights(flightLayer);
+        map.addLayer(flightLayer);
+        console.log('Flights layer added to map');
+    } catch (error) {
+        console.log('Error loading flights', error);
+    }
+
+    try {
+        await loadADSB(adsbLayer);
+        map.addLayer(adsbLayer);
+        console.log('ADSB layer added to map')
+    } catch (error) {
+        console.log('Error loading adsb', error)
+    }
+
+    
+    const airportMarkers = [];
+
+    for (let airport of airportsData()) {
+        let apt = L.marker([airport.lat, airport.lon]);
+        airportMarkers.push(apt);
+    }
+
+    const airportLayer = L.layerGroup(airportMarkers);
+    
+    let overlayData = {
+    "Airports": airportLayer,
+    "Fires": fireLayer,
+    "Flights": flightLayer,
+    "ADSB": adsbLayer,
+    "Loaded Files": loadedFileLayers()
+    };
+    
+
+    // Add layer control to map
+    L.control.layers(mapBaseLayers, overlayData).addTo(map);
+
+
     ///////////////////
     
 
@@ -77,79 +138,9 @@ async function initializeMap() {
     }
 
     
-    const loadedFileLayers = L.layerGroup().addTo(map);
-
-    const fileLayerControl = L.Control.fileLayerLoad({
-        layer: L.geoJson,
-        layerOptions: {style: {color:'red'}},
-        addToMap: false,
-        fileSizeLimit: 1024,
-        formats: [
-            '.geojson',
-            '.kml',
-            '.json',
-            '.kml',
-            '.gpx',
-        ]
-    });
-    fileLayerControl.addTo(map);
-    //var control = L.Control.fileLayerLoad();
-    fileLayerControl.loader.on('data:loaded', function (e) {
-        // Add the loaded layer to our layer group
-        loadedFileLayers.addLayer(e.layer);
-        // Fit the map to the loaded data
-        map.fitBounds(e.layer.getBounds());
-    });
     
-
-    //const drawnItems = new L.FeatureGroup();
-    const fireLayer = L.layerGroup();
-    const flightLayer = L.layerGroup();
-    const adsbLayer = L.layerGroup();
-    // Base layer definitions
-    let mapBaseLayers = mapLayers();
-    mapBaseLayers['OpenStreet'].addTo(map);
-
-    try {
-        await loadFires(fireLayer);
-        map.addLayer(fireLayer);
-        console.log('Fire layer added to map');
-    } catch (error) {
-        console.error('Error loading fires:', error);
-    }
-
-    try {
-        await loadFlights(flightLayer);
-        map.addLayer(flightLayer);
-        console.log('Flights layer added to map');
-    } catch (error) {
-        console.log('Error loading flights', error);
-    }
-
-    try {
-        await loadADSB(adsbLayer);
-        map.addLayer(adsbLayer);
-        console.log('ADSB layer added to map')
-    } catch (error) {
-        console.log('Error loading adsb', error)
-    }
-
-    // Overlay layers
-    const lgtt = L.marker([38.11, 23.78]).addTo(map);
-
-    const airports = L.layerGroup([lgtt]);
     
-    let overlayData = {
-    "Airports": airports,
-    "Fires": fireLayer,
-    "Flights": flightLayer,
-    "ADSB": adsbLayer,
-    "Loaded Files": loadedFileLayers
-    };
     
-
-    // Add layer control to map
-    L.control.layers(mapBaseLayers, overlayData).addTo(map);
     
     map.on('draw:created', function (e) {
         const layer = e.layer;
@@ -192,9 +183,7 @@ async function initializeMap() {
         });
     });
 
-    // Open new tab for alerts
-    const alertsTab = window.open('', 'alertsTab', 'width=400,height=600');
-    alertsTab.document.write('<html><head><title>Alerts</title></head><body><h1>Alerts</h1><div id="alerts"></div></body></html>');
+    
 
     function sendAlertToTab(message) {
         if (alertsTab && !alertsTab.closed) {
