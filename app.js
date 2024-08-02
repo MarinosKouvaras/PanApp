@@ -14,7 +14,13 @@ const adsbRouter = require('./routes/openSky');
 
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+  origin: ['http://localhost:5500', 'http://localhost:3000'],
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

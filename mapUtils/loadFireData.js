@@ -13,7 +13,7 @@ function loadFires(existingLayer) {
     });
 
     return new Promise((resolve, reject) => {
-        const url = '/fires';
+        const url = 'http://localhost:3000/fires';
 
         fetch(url)
             .then(response => response.text())
