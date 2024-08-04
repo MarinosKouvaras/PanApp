@@ -20,13 +20,14 @@ const {loadFires} = require('./mapUtils/loadFireData');
 const imageUrls = require('./imageUrls');
 const { loadFlights } = require('./mapUtils/loadFlightData');
 const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
+const config = require('./config');
 
 
 const UPDATE_INTERVAL = 5000;
 
 
-
 async function initializeMap() {
+    console.log(config.API_URL);
     const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
     const { drawnItems, createFormPopup, saveShape } = await loadDataMap();
     map.addLayer(drawnItems);
@@ -223,11 +224,11 @@ async function initializeMap() {
         } else {
             shapeData = layer.toGeoJSON().geometry;
         }
-        console.log(`Sending PUT request to: http://localhost:3000/shapes/${id}`);
+        console.log(`Sending PUT request to: ${config.API_URL}/shapes/${id}`);
         console.log('Shape data:', shapeData);
     
         // Send updated shape data to server
-        fetch(`http://localhost:3000/shapes/${id}`, {
+        fetch(`${config.API_URL}/shapes/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -247,7 +248,7 @@ async function initializeMap() {
         const id = layer.id;
     
         // Send delete request to server
-        fetch(`/shapes/${id}`, {
+        fetch(`${config.API_URL}/shapes/${id}`, {
             method: 'DELETE',
         })
         .then(response => response.json())

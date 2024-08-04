@@ -1,5 +1,6 @@
 const L = require('leaflet');
 const imageUrls = require('../imageUrls');
+const config = require('../config');
 
 
 function loadFires(existingLayer) {
@@ -13,7 +14,7 @@ function loadFires(existingLayer) {
     });
 
     return new Promise((resolve, reject) => {
-        const url = 'http://localhost:3000/fires';
+        const url = `${config.API_URL}/fires`;
 
         fetch(url)
             .then(response => response.text())

@@ -1,3 +1,4 @@
+const config = require('../config');
 const L = require('leaflet');
 
 
@@ -12,8 +13,10 @@ async function loadDataMap(existingLayer) {
         </form>`;
     }
     async function fetchShapes() {
+        let url = `${config.API_URL}/shapes`;
+        console.log(url);
         try {
-            const response = await fetch('http://localhost:3000/shapes');
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -102,7 +105,7 @@ async function loadDataMap(existingLayer) {
         console.log('Sending shape data:', shapeData);
     
         try {
-            const response = await fetch('http://localhost:3000/shapes', {
+            const response = await fetch(`${config.API_URL}/shapes`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

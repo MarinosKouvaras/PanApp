@@ -15,7 +15,7 @@ const adsbRouter = require('./routes/openSky');
 
 const app = express();
 const corsOptions = {
-  origin: ['http://localhost:5500', 'http://localhost:3000'],
+  origin: ['http://localhost:5500', 'http://localhost:3000', 'http://192.168.1.19:3000', 'http://192.168.1.19:5500'],
   optionsSuccessStatus: 200
 };
 
