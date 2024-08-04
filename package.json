@@ -11,6 +11,8 @@
     "dev": "nodemon app.js",
     "serverstart": "DEBUG=express-locallibrary-tutorial:* npm run devstart",
     "build": "browserify webmap.js -o public/javascripts/webmap.js & cp node_modules/leaflet/dist/leaflet.css public/stylesheets/leaflet.css & cp node_modules/leaflet-draw/dist/leaflet.draw-src.css public/stylesheets/leaflet-drw.css & cp node_modules/leaflet-draw/dist/leaflet.draw.css public/stylesheets/leafletdrw-drw.css",
+    "build:dev": "cp config.dev.js config.js && npm run build",
+    "build:prod": "cp config.prod.js config.js && npm run build",
     "lint": "eslint app.js",
     "watch": "watch 'npm run build' .",
     "db:migrate": "npx sequelize-cli db:migrate",

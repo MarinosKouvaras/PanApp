@@ -1,5 +1,7 @@
 const L = require('leaflet');
 const imageUrls = require('../imageUrls');
+const config = require('../config');
+
 require('leaflet-rotatedmarker');
 
 let currentADSB=[];
@@ -8,7 +10,7 @@ async function loadADSB(existingLayer) {
     const adsbLayer = existingLayer || new L.layerGroup();
 
     return new Promise((resolve, reject) => {
-        const url = 'http://localhost:3000/adsb';
+        const url = `${config.API_URL}/adsb`;
 
         const airplaneIcon = L.icon({
             iconUrl: imageUrls.airplaneIcon,
