@@ -300,7 +300,25 @@ async function initializeMap() {
         } catch (error) {
             console.error('Error checking ADSB data within shapes:', error);
         }
-    } 
+    }
+    ////////////////////////////////////////////////
+    // Listen for firefighting command broadcasts
+    socket.on('firefightingCommand', (data) => {
+        const line = L.polyline([data.airportCoords, data.fireCoords], { color: 'red', weight: 3 }).addTo(map);
+        commandLayer.addLayer(line);
+        const popupContent = `
+            ${data.message}<br><br>
+            <button onclick="acknowledgeCommand('${line._leaflet_id}')">Acknowledge</button>
+        `;
+        line.bindPopup(popupContent);
+        L.popup()
+            .setLatLng([(data.airportCoords[0] + data.fireCoords[0]) / 2, (data.airportCoords[1] + data.fireCoords[1]) / 2])
+            .setContent(popupContent)
+            .openOn(map);
+        sendAlertToTab(data.message);
+        notificationControl.alert(data.message);
+    });
+    ////////////////////////
          
 }
 
