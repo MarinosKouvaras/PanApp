@@ -105,7 +105,7 @@ async function loadDataMap(existingLayer) {
         console.log('Sending shape data:', shapeData);
     
         try {
-            const response = await fetch('http://localhost:3000/shapes', {
+            const response = await fetch(`${config.API_URL}/shapes`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
