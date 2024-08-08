@@ -42,6 +42,10 @@ io.on('connection', (socket) => {
     // Broadcast the command to all connected clients, including the sender
     io.emit('firefightingCommand', data);
 });
+socket.on('commandAcknowledged', (data) => {
+  // Broadcast the acknowledgment to all connected clients, including the sender
+  io.emit('commandAcknowledged', data);
+});
   socket.on('disconnect', () => {
     console.log('user disconnected');
   });

@@ -135,7 +135,8 @@ function fireFightingCommand(map, notificationControl, sendAlertToTab, my_airpor
         fireIndex,
         airportCoords,
         fireCoords,
-        message
+        message,
+        lineId: line._leaflet_id
     };
 
     // Emit the command data to the server

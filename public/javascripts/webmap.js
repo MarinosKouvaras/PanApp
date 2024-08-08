@@ -392,7 +392,8 @@ function fireFightingCommand(map, notificationControl, sendAlertToTab, my_airpor
         fireIndex,
         airportCoords,
         fireCoords,
-        message
+        message,
+        lineId: line._leaflet_id
     };
 
     // Emit the command data to the server
@@ -18267,12 +18268,13 @@ async function initializeMap() {
                     // Send acknowledgment to server
                     sendAcknowledgmentToServer(lineId, ipAddress);
                     // Remove the warning notification
-                    notificationControl.success(`Command acknowledged by IP: ${ipAddress}`);
+                    //notificationControl.success(`Command acknowledged by IP: ${ipAddress}`);
 
                     const newPopupContent = `Command acknowledged by IP: ${ipAddress}`;
                     sendAlertToTab(timeStampPrint() + ' ' +newPopupContent);
                     line.setPopupContent(newPopupContent);
                     line.openPopup();
+                    socket.emit('commandAcknowledged', { lineId, ipAddress });
                     //line.bindPopup(newPopupContent).openPopup();
                 })
                 .catch(error => {
@@ -18444,6 +18446,7 @@ async function initializeMap() {
     // Listen for firefighting command broadcasts
     socket.on('firefightingCommand', (data) => {
         const line = L.polyline([data.airportCoords, data.fireCoords], { color: 'red', weight: 3 }).addTo(map);
+        line._leaflet_id = data.lineId;
         commandLayer.addLayer(line);
         const popupContent = `
             ${data.message}<br><br>
@@ -18457,6 +18460,25 @@ async function initializeMap() {
         sendAlertToTab(data.message);
         notificationControl.alert(data.message);
     });
+
+    socket.on('commandAcknowledged', (data) => {
+    // Find the line by its Leaflet ID
+    const line = commandLayer.getLayers().find(layer => layer._leaflet_id === parseInt(data.lineId));
+
+    if (line) {
+        // Change the line color to green
+        line.setStyle({ color: 'green' });
+
+        const newPopupContent = `Command acknowledged by IP: ${data.ipAddress}`;
+        line.setPopupContent(newPopupContent);
+        line.openPopup();
+
+        // Display a success notification
+        notificationControl.success(`Command acknowledged by IP: ${data.ipAddress}`);
+    } else {
+        console.error('Line not found');
+    }
+});
     ////////////////////////
          
 }
