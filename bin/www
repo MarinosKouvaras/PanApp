@@ -7,6 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('panapp-express:server');
 var http = require('http');
+var socketIo = require('socket.io');
 
 /**
  * Get port from environment and store in Express.
@@ -20,16 +21,35 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+var io = socketIo(server);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 server.listen(port, '0.0.0.0');
-
-
-//server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+
+/**
+ * Socket.IO setup
+ */
+io.on('connection', (socket) => {
+  console.log('a user connected');
+  socket.on('chat message', (msg) => {
+    io.emit('chat message', msg);
+  });
+  socket.on('firefightingCommand', (data) => {
+    // Broadcast the command to all connected clients, including the sender
+    io.emit('firefightingCommand', data);
+});
+socket.on('commandAcknowledged', (data) => {
+  // Broadcast the acknowledgment to all connected clients, including the sender
+  io.emit('commandAcknowledged', data);
+});
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
 
 /**
  * Normalize a port into a number, string, or false.

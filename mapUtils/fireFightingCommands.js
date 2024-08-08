@@ -125,36 +125,25 @@ function fireFightingCommand(map, notificationControl, sendAlertToTab, my_airpor
         commandLayer.addLayer(line);
 
         // Create message
-        const airportName = my_airports.find(a => a.code === airport).name;
-        const fire = firefightingFeatureInstance.globalFireData[fireIndex];
-        const message = `Firefighting aircraft from ${airportName} (${airport}) has been commanded to ${command} the fire at ${fire.latitude}, ${fire.longitude}`;
+    const airportName = my_airports.find(a => a.code === airport).name;
+    const fire = firefightingFeatureInstance.globalFireData[fireIndex];
+    const message = `Firefighting aircraft from ${airportName} (${airport}) has been commanded to ${command} the fire at ${fire.latitude}, ${fire.longitude}`;
 
-        // Display message in the alerts tab
-        sendAlertToTab(message);
-        // Display notification alert
-        notificationControl.alert(message);
+    const commandData = {
+        airport,
+        command,
+        fireIndex,
+        airportCoords,
+        fireCoords,
+        message,
+        lineId: line._leaflet_id
+    };
 
-        const popupContent = `
-            ${message}<br><br>
-            <button onclick="acknowledgeCommand('${line._leaflet_id}')">Acknowledge</button>
-        `;
-        line.bindPopup(popupContent);
+    // Emit the command data to the server
+    socket.emit('firefightingCommand', commandData);
 
-        // Display a popup on the map
-        L.popup()
-            .setLatLng([(airportCoords[0] + fireCoords[0]) / 2, (airportCoords[1] + fireCoords[1]) / 2])
-            .setContent(popupContent)
-            .openOn(map);
-        
-        const commandData = {
-            airport,
-            command,
-            fireIndex,
-            airportCoords,
-            fireCoords,
-            message
-        };
-        saveCommandToStorage(commandData);
+    // Save command to local storage
+    saveCommandToStorage(commandData);
     }
 
     function getAirportCoordinates(airportCode) {
