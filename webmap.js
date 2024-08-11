@@ -24,6 +24,15 @@ const config = require('./config');
 
 
 const UPDATE_INTERVAL = 5000;
+const { checkAuth } = require('./auth');
+// Before initializing your map or any other functionality
+checkAuth().then(() => {
+    // Initialize your map and other functionality here
+    initializeMap();
+  }).catch(error => {
+    console.error('Failed to authenticate:', error);
+  });
+
 
 
 async function initializeMap() {
@@ -344,6 +353,6 @@ async function initializeMap() {
 }
 
 
-initializeMap();
+
 
 
