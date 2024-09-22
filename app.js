@@ -31,7 +31,7 @@ app.use(session({
 }));
 
 const corsOptions = {
-  origin: ['http://localhost:5500', 'http://localhost:3000', 'http://192.168.1.19:3000', 'http://192.168.1.19:5500'],
+  origin: ['http://localhost:5500', 'http://localhost:3000', 'http://192.168.1.19:3000', 'http://192.168.1.19:5500', 'http://192.168.2.5:3000'],
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
