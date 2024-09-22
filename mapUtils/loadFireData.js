@@ -77,6 +77,8 @@ function loadFires(existingLayer) {
                 reject(error);
             });
     });
+
+    
 }
 
 module.exports = {

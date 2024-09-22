@@ -1,5 +1,5 @@
 function mapLayers() {
-    const baseLayers = {
+    const createBaseLayers = () => ({
         "OpenStreet": L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -13,9 +13,19 @@ function mapLayers() {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
             minZoom: 0,
             maxZoom: 22,
-        })
-    };
-    return baseLayers;
+        }),
+    });
+    const createOverlayLayers = () => ({
+        "OpenAIP": L.tileLayer("https://{s}.api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png?apiKey=0b1825af6fdc5aaafef3d2101c6ba79c", {
+            maxZoom: 18,
+            minZoom: 7,
+            detectRetina: true,
+            transparent: false,
+            subdomains: ['a', 'b', 'c'],
+            opacity: 1.0
+        }),
+    });
+    return {createBaseLayers, createOverlayLayers};
 }
 
 module.exports = {

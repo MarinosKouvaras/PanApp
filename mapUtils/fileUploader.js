@@ -14,7 +14,6 @@ function fileUploader(map) {
             '.geojson',
             '.kml',
             '.json',
-            '.kml',
             '.gpx',
         ]
     });

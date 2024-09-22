@@ -1,5 +1,6 @@
-// Import the leaflet package
+
 const L = require('leaflet');
+
 require('leaflet-draw');
 require('leaflet-draw-drag');
 require('leaflet-realtime');
@@ -24,11 +25,20 @@ const config = require('./config');
 
 
 const UPDATE_INTERVAL = 5000;
+const { checkAuth } = require('./auth');
+// Before initializing your map or any other functionality
+checkAuth().then(() => {
+    // Initialize your map and other functionality here
+    initializeMap();
+  }).catch(error => {
+    console.error('Failed to authenticate:', error);
+  });
+
 
 
 async function initializeMap() {
     console.log(config.API_URL);
-    const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 14);
+    const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 16);
     const { drawnItems, createFormPopup, saveShape } = await loadDataMap();
     map.addLayer(drawnItems);
     console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
@@ -54,17 +64,102 @@ async function initializeMap() {
     alertsTab.document.write('<html><head><title>Alerts</title></head><body><h1>Alerts</h1><div id="alerts"></div></body></html>');
 
     // Base layer definitions
-    let mapBaseLayers = mapLayers();
-    mapBaseLayers['OpenStreet'].addTo(map);
-    const fireLayer = L.layerGroup();
+    let { createBaseLayers, createOverlayLayers } = mapLayers();
+    let baseLayers = createBaseLayers();
+    let overlayLayers = createOverlayLayers();
+    baseLayers['OpenStreet'].addTo(map);
+    overlayLayers['OpenAIP'].addTo(map);
+
+    //////////////////
+    // Assuming your Leaflet map is initialized and stored in a variable called 'map'
+
+// Initialize Cesium viewer (make sure this is inside a check for Cesium's existence)
+Cesium.Ion.defaultAccessToken ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjZjMwNzdhMi1kYmZmLTRlZGUtYmQ4MS1lNzQzYjNhYzBmNTIiLCJpZCI6MjM1MDI5LCJpYXQiOjE3MjM3NDM1NzR9.GwDT86zYf1SSHkarPDQeoLsgw0WVP7PCLdBKKSuq7AU'
+let viewer;
+if (typeof Cesium !== 'undefined') {
+    viewer = new Cesium.Viewer("cesiumContainer", {
+        terrainProvider: Cesium.createWorldTerrain({
+            requestWaterMask: true,          // Enables water effects on oceans and other bodies of water
+            requestVertexNormals: true,      // Enables lighting and shadows on terrain
+        }),
+        scene3DOnly: true,                    // Optimize for 3D
+        shadows: true,                        // Enable shadows
+        terrainShadows: Cesium.ShadowMode.ENABLED,
+    });
+    // Add an imagery layer on top of the terrain
+    viewer.imageryLayers.addImageryProvider(
+        new Cesium.IonImageryProvider({ assetId: 2 }) // Bing Maps Aerial imagery
+    );
+    // Hide Cesium viewer initially
+    document.getElementById('cesiumContainer').style.display = 'none';
+} else {
+    console.error('Cesium is not loaded');
+}
+function setupToggleButton() {
+    var toggleButton = document.getElementById('toggleView');
+    var mapContainer = document.getElementById('map');
+    var cesiumContainer = document.getElementById('cesiumContainer');
+
+    if (toggleButton) {
+        toggleButton.addEventListener('click', function() {
+            console.log('Toggle button clicked'); // Add this line for debugging
+            if (mapContainer.style.display !== 'none') {
+                mapContainer.style.display = 'none';
+                cesiumContainer.style.display = 'block';
+                if (viewer && viewer.resize) {
+                    viewer.resize();
+                }
+            } else {
+                mapContainer.style.display = 'block';
+                cesiumContainer.style.display = 'none';
+                if (map && map.invalidateSize) {
+                    map.invalidateSize();
+                }
+            }
+        });
+        console.log('Toggle button event listener added'); // Add this line for debugging
+    } else {
+        console.error('Toggle button not found');
+    }
+}
+function addFiresToCesium(viewer, fireData) {
+    fireData.forEach(fire => {
+        const entity = viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(fire.longitude, fire.latitude),
+            billboard: {
+                image: imageUrls.fireIcon,  // Path to the fire icon
+                scale: 0.3,  // Scale of the icon
+                scaleByDistance: new Cesium.NearFarScalar(
+                    1.5e2, 1.0, // Full size when near (150m)
+                    8.0e6, 0.5 // Smaller when far (8,000km)
+                ),
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,  // Disable depth testing so the icon is always on top
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // Anchor the icon to the bottom of the point
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND, // Ensure it follows the terrain
+            },
+            name: fire.name, // Optional: Name or other metadata
+            description: fire.description // Optional: Description or other info
+        });
+    });
+}
+    //////////////////
+
+
+    //overlayLayers["OpenAIP"].addTo(map);
+    let fireLayer = L.layerGroup();
     const flightLayer = L.layerGroup();
     const adsbLayer = L.layerGroup();
     fileUploader(map);
 
     try {
-        await loadFires(fireLayer);
+        const fireResult = await loadFires(fireLayer);
+        fireLayer = fireResult.layer;
+        fireData = fireResult.data;
         map.addLayer(fireLayer);
         console.log('Fire layer added to map');
+        if (typeof Cesium !== 'undefined' && viewer) {
+            addFiresToCesium(viewer, fireData);
+        }
     } catch (error) {
         console.error('Error loading fires:', error);
     }
@@ -105,7 +200,20 @@ async function initializeMap() {
     
 
     // Add layer control to map
-    L.control.layers(mapBaseLayers, overlayData).addTo(map);
+    L.control.layers(baseLayers, overlayData).addTo(map);
+    // Ensure OpenAIP layer stays on top when base layer changes
+    map.on('baselayerchange', function (e) {
+        if (map.hasLayer(overlayLayers['OpenAIP'])) {
+            overlayLayers['OpenAIP'].bringToFront();
+        }
+    });
+
+    // Optional: If you want to ensure OpenAIP is always visible
+    map.on('overlayadd', function (e) {
+        if (e.name === 'OpenAIP') {
+            e.layer.bringToFront();
+        }
+    });
 
 
     ///////////////////
@@ -340,10 +448,13 @@ async function initializeMap() {
     }
 });
     ////////////////////////
-         
+    document.addEventListener('DOMContentLoaded', setupToggleButton);
+
+    // Also set up the button after a short delay
+    setTimeout(setupToggleButton, 1000);        
 }
 
 
-initializeMap();
+
 
 

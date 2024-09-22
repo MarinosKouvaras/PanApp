@@ -1,9 +1,12 @@
 {
-  "name": "panapp-express",
-  "version": "0.0.0",
+  "name": "panorama",
+  "version": "1.0.0",
+  "description": "Panorama application is an geospatial web map application built for command and control",
   "browser": {
     "./assets/fire.png": "./assets/fire.png"
   },
+  "author": {"name": " Marinos Kouvaras",
+              "email": "ap23011@hua.gr"},      
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
@@ -24,11 +27,13 @@
     "axios": "^0.27.2",
     "body-parser": "^1.20.2",
     "bootbox": "^6.0.0",
+    "cesium": "^1.120.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "debug": "~2.6.9",
     "dotenv": "^16.4.5",
     "express": "~4.16.1",
+    "express-session": "^1.18.0",
     "leaflet": "^1.9.4",
     "leaflet-control-window": "^1.0.0",
     "leaflet-dialog": "^1.0.5",
@@ -40,6 +45,7 @@
     "leaflet-realtime": "^2.2.0",
     "leaflet-rotatedmarker": "^0.2.0",
     "morgan": "~1.9.1",
+    "pbkdf2-password": "^1.2.1",
     "pg": "^8.12.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.3",
@@ -47,7 +53,8 @@
     "socket.io": "^4.7.5",
     "sqlite3": "^5.1.7",
     "urlify": "^0.3.6",
-    "watch": "^1.0.2"
+    "watch": "^1.0.2",
+    "winston": "^3.14.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.23.9",
