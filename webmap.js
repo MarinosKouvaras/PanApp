@@ -21,6 +21,7 @@ const {loadFires} = require('./mapUtils/loadFireData');
 const imageUrls = require('./imageUrls');
 const { loadFlights } = require('./mapUtils/loadFlightData');
 const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
+const {checkADSBInShapes} = require('./mapUtils/airplaneInShape');
 const config = require('./config');
 
 
@@ -302,16 +303,20 @@ function addFiresToCesium(viewer, fireData) {
     function sendAlertToTab(message) {
         if (alertsTab && !alertsTab.closed) {
             console.log('Sending alert to tab:', message); // Debugging
-            alertsTab.document.getElementById('alerts').innerHTML += `<p>${message}</p>`;
+            alertsTab.document.getElementById('alerts').innerHTML += `<p>${timeStampPrint()+' '+message}</p>`;
         } else {
             console.error('Alerts tab is not available or closed');
         }
     }
+
     
 
     // Ensure the new tab is fully loaded before using it
     setTimeout(() => {
-        setInterval(() => checkADSBInShapes(sendAlertToTab), UPDATE_INTERVAL);
+        setInterval(async () => {
+            const messages = await checkADSBInShapes(); // Use existingLayer if necessary
+            messages.forEach(msg => sendAlertToTab(msg)); // Send each message to the alert tab
+        }, UPDATE_INTERVAL);
     }, 500);
 
     setInterval(() => loadFlights(flightLayer), UPDATE_INTERVAL);
@@ -382,33 +387,6 @@ function addFiresToCesium(viewer, fireData) {
         localStorage.clear();
     });
 
-    async function checkADSBInShapes(sendAlert) {
-        try {
-            const adsbData = await getCurrentADSB();
-            const drawnLayers = drawnItems.getLayers();
-    
-            adsbData.forEach(adsbPoint => {
-                const point = turf.point([adsbPoint.longitude, adsbPoint.latitude]);
-    
-                drawnLayers.forEach(layer => {
-                    let shape;
-    
-                    if (layer instanceof L.Circle) {
-                        const center = layer.getLatLng();
-                        shape = turf.circle([center.lng, center.lat], layer.getRadius() / 1000, { units: 'kilometers' });
-                    } else {
-                        shape = layer.toGeoJSON().geometry;
-                    }
-    
-                    if (turf.booleanPointInPolygon(point, shape)) {
-                        sendAlertToTab(`Airplane ${adsbPoint.id} is within shape with ID ${layer.id}!`);
-                    }
-                });
-            });
-        } catch (error) {
-            console.error('Error checking ADSB data within shapes:', error);
-        }
-    }
     ////////////////////////////////////////////////
     // Listen for firefighting command broadcasts
     socket.on('firefightingCommand', (data) => {
