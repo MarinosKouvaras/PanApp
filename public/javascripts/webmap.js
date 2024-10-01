@@ -220,6 +220,7 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 },{}],4:[function(require,module,exports){
 // config.prod.js
 module.exports = {
+    //API_URL:'https://b3b3-2a02-2149-8be8-5600-888e-689f-5fd0-c1d6.ngrok-free.app'
     API_URL: 'http://192.168.1.19:3000'
     //API_URL: 'http://192.168.2.5:3000'
   };
@@ -263,7 +264,6 @@ function fileUploader(map) {
             '.geojson',
             '.kml',
             '.json',
-            '.kml',
             '.gpx',
         ]
     });
@@ -902,14 +902,14 @@ function mapDrawControllers(drawnItems) {
         draw : {
             polyline: {
                 shapeOptions: {
-                    color: '#f33bee',
+                    color: '#fd2ffd',
                     weight: 20
                 }
             },
             polygon: {
                 shapeOptions: {
                     color: 'black',
-                    fillColor: '#ab0707',
+                    fillColor: '#b37400',
                     fillOpacity: 0.5
                 }
             },
@@ -947,7 +947,8 @@ function mapFileImport() {
         // Restrict accepted file formats (default: .geojson, .json, .kml, and .gpx) ?
         formats: [
             '.geojson',
-            '.kml'
+            '.kml',
+            '.gpx',
         ]});
 }
 
@@ -18223,7 +18224,7 @@ checkAuth().then(() => {
 
 async function initializeMap() {
     console.log(config.API_URL);
-    const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 16);
+    const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 12);
     const { drawnItems, createFormPopup, saveShape } = await loadDataMap();
     map.addLayer(drawnItems);
     console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
@@ -18328,9 +18329,6 @@ function addFiresToCesium(viewer, fireData) {
     });
 }
     //////////////////
-
-
-    //overlayLayers["OpenAIP"].addTo(map);
     let fireLayer = L.layerGroup();
     const flightLayer = L.layerGroup();
     const adsbLayer = L.layerGroup();
@@ -18380,7 +18378,8 @@ function addFiresToCesium(viewer, fireData) {
     "Fires": fireLayer,
     "Flights": flightLayer,
     "ADSB": adsbLayer,
-    "Loaded Files": loadedFileLayers()
+    "Loaded Files": loadedFileLayers(),
+    "OpenAIP": overlayLayers['OpenAIP']
     };
     
 
@@ -18566,6 +18565,7 @@ function addFiresToCesium(viewer, fireData) {
             deleteShape(layer);
         });
         commandLayer.clearLayers();
+        localStorage.clear();
     });
 
     async function checkADSBInShapes(sendAlert) {

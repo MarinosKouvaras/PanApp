@@ -39,14 +39,14 @@ app.use(cors(corsOptions));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 // Dummy database
 const users = {
-  marinos: { name: 'marinos' }
+  panorama: { name: 'panorama' }
 };
 
 // Generate a salt and hash the password for the user
 hash({ password: '12345' }, function (err, pass, salt, hash) {
   if (err) throw err;
-  users.marinos.salt = salt;
-  users.marinos.hash = hash;
+  users.panorama.salt = salt;
+  users.panorama.hash = hash;
 });
 
 // Authentication function

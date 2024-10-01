@@ -38,7 +38,7 @@ checkAuth().then(() => {
 
 async function initializeMap() {
     console.log(config.API_URL);
-    const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 16);
+    const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 12);
     const { drawnItems, createFormPopup, saveShape } = await loadDataMap();
     map.addLayer(drawnItems);
     console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
@@ -143,9 +143,6 @@ function addFiresToCesium(viewer, fireData) {
     });
 }
     //////////////////
-
-
-    //overlayLayers["OpenAIP"].addTo(map);
     let fireLayer = L.layerGroup();
     const flightLayer = L.layerGroup();
     const adsbLayer = L.layerGroup();
@@ -195,7 +192,8 @@ function addFiresToCesium(viewer, fireData) {
     "Fires": fireLayer,
     "Flights": flightLayer,
     "ADSB": adsbLayer,
-    "Loaded Files": loadedFileLayers()
+    "Loaded Files": loadedFileLayers(),
+    "OpenAIP": overlayLayers['OpenAIP']
     };
     
 
@@ -381,6 +379,7 @@ function addFiresToCesium(viewer, fireData) {
             deleteShape(layer);
         });
         commandLayer.clearLayers();
+        localStorage.clear();
     });
 
     async function checkADSBInShapes(sendAlert) {
