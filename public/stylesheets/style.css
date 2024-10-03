@@ -17,6 +17,15 @@ body {
   position: relative;
 }
 
+#cesiumContainer {
+  width: 100%; 
+  min-height: 200px; /* Ensure the map has a minimum height */
+  height: calc(100vh - 6rem); /* Initial height, can be adjusted */
+  resize: vertical; /* Allow resizing vertically */
+  overflow: hidden; /* Prevent overflow */
+  position: relative;
+}
+
 #form {
   background: rgba(0, 0, 0, 0.15);
   padding: 0.25rem;
@@ -125,4 +134,16 @@ body {
 
 #cesiumContainer {
   display: none; /* Initially hide Cesium */
+}
+
+#time {
+  position: absolute; /* Fixed position */
+  bottom: 130px; /* Distance from the bottom */
+  left: 10px; /* Distance from the right */
+  font-size: 1.0rem; /* Font size */
+  color: #080808; /* Text color */
+  background: rgba(255, 255, 255); /* Optional: Slightly transparent background */
+  padding: 5px 5px; /* Padding for aesthetics */
+  border-radius: 5px; /* Rounded corners */
+  z-index: 1000; /* Ensure it is above other elements */
 }

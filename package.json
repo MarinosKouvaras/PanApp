@@ -5,8 +5,10 @@
   "browser": {
     "./assets/fire.png": "./assets/fire.png"
   },
-  "author": {"name": " Marinos Kouvaras",
-              "email": "ap23011@hua.gr"},      
+  "author": {
+    "name": " Marinos Kouvaras",
+    "email": "ap23011@hua.gr"
+  },
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
@@ -27,7 +29,7 @@
     "axios": "^0.27.2",
     "body-parser": "^1.20.2",
     "bootbox": "^6.0.0",
-    "cesium": "^1.120.0",
+    "cesium": "^1.122.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "debug": "~2.6.9",

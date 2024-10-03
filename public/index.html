@@ -14,7 +14,8 @@
     <link rel="stylesheet" href="stylesheets/leaflet-notifications.css">
     <link rel="stylesheet" href="stylesheets/leaflet-notifications.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.82.1/Widgets/widgets.css" rel="stylesheet">
-    
+    <link href="Leaflet.Weather.css" rel="stylesheet" type="text/css" />
+    <script src="Leaflet.Weather.js"></script>
 </head>
 <body>
     <button id="toggleView">2D/3D</button>
@@ -25,6 +26,8 @@
     <form id="form" action="">
         <input id="input" autocomplete="off" /><button>Send</button>
     </form>
+    <div id="time">Loading...</div>
+
     <script src="javascripts/webmap.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.82.1/Cesium.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>

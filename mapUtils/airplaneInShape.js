@@ -6,11 +6,11 @@ const L = require('leaflet');
 let aircraftInShapes = {}; // Current state of aircraft in shapes
 let lastAlertState = {}; // Keep track of the last alert state for each aircraft and shape
 
-async function checkADSBInShapes() {
+async function checkADSBInShapes(drawnItems) {
     try {
         let messages = []; // Move messages array inside the try block
 
-        const drawnItems = (await loadDataMap()).drawnItems;
+        //const drawnItems = (await loadDataMap()).drawnItems;
         const adsbData = await getCurrentADSB();
         const drawnLayers = drawnItems.getLayers();
 
@@ -23,6 +23,7 @@ async function checkADSBInShapes() {
             drawnLayers.forEach(layer => {
                 let shape;
                 let shapeId = layer.id;
+                let shapeName = layer.name
 
                 // Create shape based on layer type
                 if (layer instanceof L.Circle) {
@@ -55,7 +56,7 @@ async function checkADSBInShapes() {
 
                 // Entering the shape
                 if (isInsideShape && !wasInsideShape) {
-                    const message = `Airplane ${adsbPoint.id} has entered shape with ID ${shapeId}!`;
+                    const message = `Airplane ${adsbPoint.id} has entered shape with ID ${shapeId}-${shapeName}!`;
                     if (lastAlertState[adsbPoint.id][shapeId].lastState !== 'entered') {
                         messages.push(message);
                         lastAlertState[adsbPoint.id][shapeId].lastState = 'entered'; // Update the last state
@@ -64,7 +65,7 @@ async function checkADSBInShapes() {
 
                 // Exiting the shape
                 if (!isInsideShape && wasInsideShape) {
-                    const message = `Airplane ${adsbPoint.id} has exited shape with ID ${shapeId}!`;
+                    const message = `Airplane ${adsbPoint.id} has exited shape with ID ${shapeId}-${shapeName}!`;
                     if (lastAlertState[adsbPoint.id][shapeId].lastState !== 'exited') {
                         messages.push(message);
                         lastAlertState[adsbPoint.id][shapeId].lastState = 'exited'; // Update the last state

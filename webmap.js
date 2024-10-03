@@ -22,6 +22,7 @@ const imageUrls = require('./imageUrls');
 const { loadFlights } = require('./mapUtils/loadFlightData');
 const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
 const {checkADSBInShapes} = require('./mapUtils/airplaneInShape');
+const { updateTime } = require('./mapUtils/gpsTime');
 const config = require('./config');
 
 
@@ -71,6 +72,7 @@ async function initializeMap() {
     baseLayers['OpenStreet'].addTo(map);
     overlayLayers['OpenAIP'].addTo(map);
 
+    //////////////////
     //////////////////
     // Assuming your Leaflet map is initialized and stored in a variable called 'map'
 
@@ -314,13 +316,15 @@ function addFiresToCesium(viewer, fireData) {
     // Ensure the new tab is fully loaded before using it
     setTimeout(() => {
         setInterval(async () => {
-            const messages = await checkADSBInShapes(); // Use existingLayer if necessary
+            const messages = await checkADSBInShapes(drawnItems); // Use existingLayer if necessary
             messages.forEach(msg => sendAlertToTab(msg)); // Send each message to the alert tab
         }, UPDATE_INTERVAL);
     }, 500);
 
     setInterval(() => loadFlights(flightLayer), UPDATE_INTERVAL);
     setInterval(() => loadADSB(adsbLayer), UPDATE_INTERVAL);
+    setInterval(() => updateTime(), 1000);
+    
 
 
     function updateShape(layer) {
@@ -386,6 +390,7 @@ function addFiresToCesium(viewer, fireData) {
         commandLayer.clearLayers();
         localStorage.clear();
     });
+
 
     ////////////////////////////////////////////////
     // Listen for firefighting command broadcasts

@@ -94,7 +94,8 @@ app.post('/login', (req, res, next) => {
         res.redirect('/');
       });
     } else {
-      res.status(401).json({ message: 'Authentication failed, please check your username and password.' });
+      const errorMessage = 'Authentication failed, please check your username and password.';
+      res.redirect(`/login?error=${encodeURIComponent(errorMessage)}`);
     }
   });
 });

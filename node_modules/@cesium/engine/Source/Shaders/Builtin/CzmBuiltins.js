@@ -103,6 +103,7 @@ import czm_nearFarScalar from './Functions/nearFarScalar.js'
 import czm_octDecode from './Functions/octDecode.js'
 import czm_packDepth from './Functions/packDepth.js'
 import czm_pbrLighting from './Functions/pbrLighting.js'
+import czm_pbrNeutralTonemapping from './Functions/pbrNeutralTonemapping.js'
 import czm_phong from './Functions/phong.js'
 import czm_planeDistance from './Functions/planeDistance.js'
 import czm_pointAlongRay from './Functions/pointAlongRay.js'
@@ -112,7 +113,6 @@ import czm_readDepth from './Functions/readDepth.js'
 import czm_readNonPerspective from './Functions/readNonPerspective.js'
 import czm_reverseLogDepth from './Functions/reverseLogDepth.js'
 import czm_round from './Functions/round.js'
-import czm_sampleOctahedralProjection from './Functions/sampleOctahedralProjection.js'
 import czm_saturation from './Functions/saturation.js'
 import czm_shadowDepthCompare from './Functions/shadowDepthCompare.js'
 import czm_shadowVisibility from './Functions/shadowVisibility.js'
@@ -241,6 +241,7 @@ export default {
     czm_octDecode : czm_octDecode,
     czm_packDepth : czm_packDepth,
     czm_pbrLighting : czm_pbrLighting,
+    czm_pbrNeutralTonemapping : czm_pbrNeutralTonemapping,
     czm_phong : czm_phong,
     czm_planeDistance : czm_planeDistance,
     czm_pointAlongRay : czm_pointAlongRay,
@@ -250,7 +251,6 @@ export default {
     czm_readNonPerspective : czm_readNonPerspective,
     czm_reverseLogDepth : czm_reverseLogDepth,
     czm_round : czm_round,
-    czm_sampleOctahedralProjection : czm_sampleOctahedralProjection,
     czm_saturation : czm_saturation,
     czm_shadowDepthCompare : czm_shadowDepthCompare,
     czm_shadowVisibility : czm_shadowVisibility,
