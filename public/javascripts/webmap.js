@@ -218,11 +218,8 @@ if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   module.exports = { checkAuth };
 }
 },{}],4:[function(require,module,exports){
-// config.prod.js
 module.exports = {
-    //API_URL:'https://b3b3-2a02-2149-8be8-5600-888e-689f-5fd0-c1d6.ngrok-free.app'
-    API_URL: 'http://192.168.1.19:3000'
-    //API_URL: 'http://192.168.2.5:3000'
+    API_URL: 'http://localhost:3000'
   };
 },{}],5:[function(require,module,exports){
 
@@ -18638,6 +18635,7 @@ function addFiresToCesium(viewer, fireData) {
     setInterval(() => loadFlights(flightLayer), UPDATE_INTERVAL);
     setInterval(() => loadADSB(adsbLayer), UPDATE_INTERVAL);
     setInterval(() => updateTime(), 1000);
+    setInterval(() => window.reload(), 30000);
     
 
 

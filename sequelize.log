@@ -1617,3 +1617,34 @@
 2024-10-03T19:41:21.211Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" WHERE "Shape"."id" = '43';
 2024-10-03T19:41:21.214Z - debug - Executing (default): DELETE FROM "Shapes" WHERE "id" = 44
 2024-10-03T19:41:21.220Z - debug - Executing (default): DELETE FROM "Shapes" WHERE "id" = 43
+2024-10-03T20:51:23.207Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:51:23.214Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T20:51:39.531Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:51:39.535Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T20:51:50.441Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:51:50.445Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T20:52:26.912Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:52:26.919Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T20:53:20.919Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:53:20.920Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T20:54:27.437Z - debug - Executing (default): INSERT INTO "Shapes" ("id","type","coordinates","name","description","userId","createdAt","updatedAt") VALUES (DEFAULT,$1,$2,$3,$4,$5,$6,$7) RETURNING "id","type","coordinates","radius","name","description","userId","createdAt","updatedAt";
+2024-10-03T20:54:30.740Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:54:30.743Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T20:54:56.638Z - debug - Executing (default): INSERT INTO "Shapes" ("id","type","coordinates","name","description","userId","createdAt","updatedAt") VALUES (DEFAULT,$1,$2,$3,$4,$5,$6,$7) RETURNING "id","type","coordinates","radius","name","description","userId","createdAt","updatedAt";
+2024-10-03T20:54:58.878Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:54:58.881Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T20:56:24.332Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:56:24.336Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T20:56:37.611Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:56:37.616Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T20:56:54.657Z - debug - Executing (default): INSERT INTO "Shapes" ("id","type","coordinates","name","description","userId","createdAt","updatedAt") VALUES (DEFAULT,$1,$2,$3,$4,$5,$6,$7) RETURNING "id","type","coordinates","radius","name","description","userId","createdAt","updatedAt";
+2024-10-03T20:56:56.795Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T20:56:56.796Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T21:02:34.472Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T21:02:34.482Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T21:03:08.025Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T21:03:08.030Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T21:03:40.692Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T21:03:40.696Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;
+2024-10-03T21:04:17.837Z - debug - Executing (default): SELECT count(*) AS "count" FROM "Shapes" AS "Shape";
+2024-10-03T21:04:17.854Z - debug - Executing (default): SELECT "id", "type", "coordinates", "radius", "name", "description", "userId", "createdAt", "updatedAt" FROM "Shapes" AS "Shape" ORDER BY "Shape"."createdAt" DESC LIMIT 18 OFFSET 0;

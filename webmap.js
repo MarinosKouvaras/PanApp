@@ -324,6 +324,7 @@ function addFiresToCesium(viewer, fireData) {
     setInterval(() => loadFlights(flightLayer), UPDATE_INTERVAL);
     setInterval(() => loadADSB(adsbLayer), UPDATE_INTERVAL);
     setInterval(() => updateTime(), 1000);
+    setInterval(() => window.location.reload(), 30000);
     
 
 
