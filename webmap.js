@@ -21,6 +21,8 @@ const {loadFires} = require('./mapUtils/loadFireData');
 const imageUrls = require('./imageUrls');
 const { loadFlights } = require('./mapUtils/loadFlightData');
 const { loadADSB, getCurrentADSB } = require('./mapUtils/loadADSB');
+const {checkADSBInShapes} = require('./mapUtils/airplaneInShape');
+const { updateTime } = require('./mapUtils/gpsTime');
 const config = require('./config');
 
 
@@ -38,7 +40,7 @@ checkAuth().then(() => {
 
 async function initializeMap() {
     console.log(config.API_URL);
-    const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 16);
+    const map = L.map('map', {zoomSnap: 0.25, zoomDelta: 0.5, boxZoom:true}).setView([38.11, 23.78], 12);
     const { drawnItems, createFormPopup, saveShape } = await loadDataMap();
     map.addLayer(drawnItems);
     console.log('Layers in drawnItems after loading:', drawnItems.getLayers());
@@ -70,6 +72,7 @@ async function initializeMap() {
     baseLayers['OpenStreet'].addTo(map);
     overlayLayers['OpenAIP'].addTo(map);
 
+    //////////////////
     //////////////////
     // Assuming your Leaflet map is initialized and stored in a variable called 'map'
 
@@ -143,9 +146,6 @@ function addFiresToCesium(viewer, fireData) {
     });
 }
     //////////////////
-
-
-    //overlayLayers["OpenAIP"].addTo(map);
     let fireLayer = L.layerGroup();
     const flightLayer = L.layerGroup();
     const adsbLayer = L.layerGroup();
@@ -195,7 +195,8 @@ function addFiresToCesium(viewer, fireData) {
     "Fires": fireLayer,
     "Flights": flightLayer,
     "ADSB": adsbLayer,
-    "Loaded Files": loadedFileLayers()
+    "Loaded Files": loadedFileLayers(),
+    "OpenAIP": overlayLayers['OpenAIP']
     };
     
 
@@ -304,20 +305,27 @@ function addFiresToCesium(viewer, fireData) {
     function sendAlertToTab(message) {
         if (alertsTab && !alertsTab.closed) {
             console.log('Sending alert to tab:', message); // Debugging
-            alertsTab.document.getElementById('alerts').innerHTML += `<p>${message}</p>`;
+            alertsTab.document.getElementById('alerts').innerHTML += `<p>${timeStampPrint()+' '+message}</p>`;
         } else {
             console.error('Alerts tab is not available or closed');
         }
     }
+
     
 
     // Ensure the new tab is fully loaded before using it
     setTimeout(() => {
-        setInterval(() => checkADSBInShapes(sendAlertToTab), UPDATE_INTERVAL);
+        setInterval(async () => {
+            const messages = await checkADSBInShapes(drawnItems); // Use existingLayer if necessary
+            messages.forEach(msg => sendAlertToTab(msg)); // Send each message to the alert tab
+        }, UPDATE_INTERVAL);
     }, 500);
 
     setInterval(() => loadFlights(flightLayer), UPDATE_INTERVAL);
     setInterval(() => loadADSB(adsbLayer), UPDATE_INTERVAL);
+    setInterval(() => updateTime(), 1000);
+    setInterval(() => window.location.reload(), 30000);
+    
 
 
     function updateShape(layer) {
@@ -381,35 +389,10 @@ function addFiresToCesium(viewer, fireData) {
             deleteShape(layer);
         });
         commandLayer.clearLayers();
+        localStorage.clear();
     });
 
-    async function checkADSBInShapes(sendAlert) {
-        try {
-            const adsbData = await getCurrentADSB();
-            const drawnLayers = drawnItems.getLayers();
-    
-            adsbData.forEach(adsbPoint => {
-                const point = turf.point([adsbPoint.longitude, adsbPoint.latitude]);
-    
-                drawnLayers.forEach(layer => {
-                    let shape;
-    
-                    if (layer instanceof L.Circle) {
-                        const center = layer.getLatLng();
-                        shape = turf.circle([center.lng, center.lat], layer.getRadius() / 1000, { units: 'kilometers' });
-                    } else {
-                        shape = layer.toGeoJSON().geometry;
-                    }
-    
-                    if (turf.booleanPointInPolygon(point, shape)) {
-                        sendAlertToTab(`Airplane ${adsbPoint.id} is within shape with ID ${layer.id}!`);
-                    }
-                });
-            });
-        } catch (error) {
-            console.error('Error checking ADSB data within shapes:', error);
-        }
-    }
+
     ////////////////////////////////////////////////
     // Listen for firefighting command broadcasts
     socket.on('firefightingCommand', (data) => {

@@ -16,7 +16,7 @@ function mapLayers() {
         }),
     });
     const createOverlayLayers = () => ({
-        "OpenAIP": L.tileLayer("https://{s}.api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png?apiKey=0b1825af6fdc5aaafef3d2101c6ba79c", {
+        "OpenAIP": L.tileLayer('https://{s}.api.tiles.openaip.net/api/data/openaip/{z}/{x}/{y}.png?apiKey=0b1825af6fdc5aaafef3d2101c6ba79c', {
             maxZoom: 18,
             minZoom: 7,
             detectRetina: true,

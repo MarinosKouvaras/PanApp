@@ -10,14 +10,14 @@ function mapDrawControllers(drawnItems) {
         draw : {
             polyline: {
                 shapeOptions: {
-                    color: '#f33bee',
+                    color: '#fd2ffd',
                     weight: 20
                 }
             },
             polygon: {
                 shapeOptions: {
                     color: 'black',
-                    fillColor: '#ab0707',
+                    fillColor: '#b37400',
                     fillOpacity: 0.5
                 }
             },
@@ -55,7 +55,8 @@ function mapFileImport() {
         // Restrict accepted file formats (default: .geojson, .json, .kml, and .gpx) ?
         formats: [
             '.geojson',
-            '.kml'
+            '.kml',
+            '.gpx',
         ]});
 }
 

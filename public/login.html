@@ -6,7 +6,7 @@
     <title>Login</title>
     <style>
       body {
-        background-image: url('./assets/landing_haf_low.png');
+        background-image: url('./assets/landing_page.jpg');
         background-size: cover;
         background-position: center;
         font-family: Arial, sans-serif;
@@ -15,16 +15,29 @@
         align-items: center;
         height: 100vh;
         margin: 0;
+        flex-direction: column; /* Ensure elements are stacked vertically */
+      }
+      h1 {
+        color: white;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 3rem;
       }
       form {
-        background-image: url('./assets/landing_haf_low.png');
+        background-color: rgba(255, 255, 255, 0.8); /* Light background for the form */
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        width: 300px;
       }
+
+      #error-message {
+        background-color: rgba(255, 255, 255, 0.8);
+      }
+
       input {
         display: block;
-        width: 100%;
+        width: 90%;
         padding: 10px;
         margin: 10px 0;
         border: 1px solid #ccc;
@@ -45,10 +58,28 @@
     </style>
 </head>
 <body>
-    <form action="/login" method="post">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-    </form>
+  <h1>PANORAMA</h1>
+
+  <!-- Display error message if it exists -->
+  <div id="error-message" style="color: red; text-align: center;">
+    <!-- The error message will be filled in with JavaScript -->
+  </div>
+
+  <form action="/login" method="post">
+      <input type="text" name="username" placeholder="Username" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <button type="submit">Login</button>
+  </form>
+
+  <script>
+    // Check if there's an error message in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorMessage = urlParams.get('error');
+    
+    // If there is an error message, display it
+    if (errorMessage) {
+      document.getElementById('error-message').textContent = errorMessage;
+    }
+  </script>
 </body>
 </html>

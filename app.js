@@ -31,7 +31,7 @@ app.use(session({
 }));
 
 const corsOptions = {
-  origin: ['http://localhost:5500', 'http://localhost:3000', 'http://192.168.1.19:3000', 'http://192.168.1.19:5500', 'http://192.168.2.5:3000'],
+  origin: ['http://localhost:5500', 'http://localhost:3000', 'http://10.100.54.33:3000', 'http://192.168.1.19:5500', 'http://192.168.2.5:3000'],
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
@@ -39,14 +39,14 @@ app.use(cors(corsOptions));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 // Dummy database
 const users = {
-  marinos: { name: 'marinos' }
+  panorama: { name: 'panorama' }
 };
 
 // Generate a salt and hash the password for the user
 hash({ password: '12345' }, function (err, pass, salt, hash) {
   if (err) throw err;
-  users.marinos.salt = salt;
-  users.marinos.hash = hash;
+  users.panorama.salt = salt;
+  users.panorama.hash = hash;
 });
 
 // Authentication function
@@ -94,7 +94,8 @@ app.post('/login', (req, res, next) => {
         res.redirect('/');
       });
     } else {
-      res.status(401).json({ message: 'Authentication failed, please check your username and password.' });
+      const errorMessage = 'Authentication failed, please check your username and password.';
+      res.redirect(`/login?error=${encodeURIComponent(errorMessage)}`);
     }
   });
 });
